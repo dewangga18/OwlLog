@@ -41,6 +41,7 @@ public final class OwlURLProtocol: URLProtocol {
             headers: newRequest.allHTTPHeaderFields ?? [:],
             body: newRequest.httpBody,
             contentType: newRequest.value(forHTTPHeaderField: "Content-Type"),
+            curl: OwlCurlBuilder.generate(from: newRequest),
             queryParameters: newRequest.url?.queryParameters ?? [:],
         )
 
