@@ -106,7 +106,7 @@ private extension OwlDetailView {
                     }
                 }
             }
-            .navigationTitle(call.endpoint)
+            .navigationTitle("Call Details")
             .navigationBarTitleDisplayMode(.inline)
             .if(true) { view in
                 if #available(iOS 26.0, *) {
@@ -140,7 +140,7 @@ private extension OwlDetailView {
                         }
                 }
             }
-            .navigationTitle(call.endpoint)
+            .navigationTitle("Call Details")
             .navigationBarTitleDisplayMode(.inline)
         }
     }
