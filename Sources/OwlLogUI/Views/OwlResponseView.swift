@@ -21,7 +21,7 @@ public struct OwlResponseView: View {
             if let body = call.response?.body {
                 contentView(body: body)
             } else {
-                emptyView
+                EmptyView()
             }
         }
     }
@@ -41,15 +41,6 @@ private extension OwlResponseView {
                 buildContent(contentType: contentType, body: body)
                     .padding(16)
             }
-        }
-    }
-
-    var emptyView: some View {
-        VStack {
-            Spacer()
-            Text("There is no response")
-                .foregroundColor(.secondary)
-            Spacer()
         }
     }
 }
@@ -115,7 +106,7 @@ private extension OwlResponseView {
             )
         } else {
             return AnyView(
-                Text(String(describing: body))
+                Text(OwlContentFormatter.convertToString(body))
                     .font(.system(size: 12, design: .monospaced))
                     .textSelection(.enabled)
             )

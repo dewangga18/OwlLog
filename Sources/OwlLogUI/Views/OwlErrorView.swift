@@ -26,12 +26,7 @@ public struct OwlErrorView: View {
                         .padding(16)
                 }
             } else {
-                VStack {
-                    Spacer()
-                    Text("There is no error")
-                        .foregroundStyle(.secondary)
-                    Spacer()
-                }
+                EmptyView()
             }
         }
     }

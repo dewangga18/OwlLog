@@ -13,6 +13,7 @@ public struct OwlLogView: View {
 
     @State private var query: String = ""
     @State private var isSearching = false
+    @State private var showStats = false
 
     public init(service: OwlService) {
         self.service = service
@@ -23,9 +24,25 @@ public struct OwlLogView: View {
             NavigationStack {
                 bodyView
             }
+            .sheet(isPresented: $showStats) {
+                NavigationStack {
+                    OwlStatsView(service: service)
+                        .toolbar {
+                            ToolbarItem(placement: .topBarTrailing) {
+                                Button("Done") { showStats = false }
+                            }
+                        }
+                }
+            }
         } else {
             NavigationView {
                 bodyView
+            }
+            .sheet(isPresented: $showStats) {
+                NavigationView {
+                    OwlStatsView(service: service)
+                        .navigationBarItems(trailing: Button("Done") { showStats = false })
+                }
             }
         }
     }
@@ -62,7 +79,7 @@ private extension OwlLogView {
 
                 Menu {
                     Button {
-                        // Navigate to stats
+                        showStats = true
                     } label: {
                         Label("Statistics", systemImage: "chart.bar")
                     }
@@ -82,31 +99,7 @@ private extension OwlLogView {
     // MARK: Filter Section
 
     var filteredCalls: [OwlHTTPCall] {
-        service.calls
-            .reversed()
-            .filter { matches($0) }
-    }
-
-    // MARK: Matched Section
-
-    func matches(_ call: OwlHTTPCall) -> Bool {
-        guard !query.isEmpty else { return true }
-
-        let normalized = query.lowercased()
-
-        let fields: [String?] = [
-            call.method,
-            call.endpoint,
-            call.server,
-            call.uri,
-            call.response?.status.map { String($0) },
-            call.error?.error.localizedDescription,
-            call.error?.stackTrace
-        ]
-
-        return fields.contains {
-            $0?.lowercased().contains(normalized) ?? false
-        }
+        service.filteredCalls(query)
     }
 
     // MARK: Call Row Sections
@@ -169,11 +162,25 @@ private extension OwlLogView {
         VStack {
             Spacer()
 
-            Text(query.isEmpty
-                ? "There is no logged data"
-                : "No calls match \"\(query)\"")
-                .multilineTextAlignment(.center)
-                .foregroundColor(.secondary)
+            VStack(spacing: 16) {
+                Image(systemName: query.isEmpty ? "tray" : "magnifyingglass")
+                    .font(.system(size: 48, weight: .regular))
+                    .foregroundStyle(.secondary)
+
+                Text(query.isEmpty
+                    ? "No Logged Data"
+                    : "No calls match \"\(query)\"")
+                    .font(.headline)
+                    .multilineTextAlignment(.center)
+
+                Text(query.isEmpty
+                    ? "API requests will appear here once detected."
+                    : "Try adjusting your search or filter.")
+                    .font(.subheadline)
+                    .foregroundStyle(.secondary)
+                    .multilineTextAlignment(.center)
+                    .padding(.horizontal, 24)
+            }
 
             Spacer()
         }

@@ -19,6 +19,10 @@ public struct OwlHTTPRequest: Sendable, Equatable {
     public let formDataFiles: [OwlHTTPFormDataFile]?
     public let formDataFields: [OwlFormDataField]?
 
+    public var sortedHeaders: [(key: String, value: String)] {
+        headers.sorted(by: { $0.key < $1.key })
+    }
+
     public init(
         size: Int = 0,
         time: Date = Date(),

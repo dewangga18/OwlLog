@@ -16,6 +16,7 @@ public final class OwlService: ObservableObject {
 
     @Published public private(set) var calls: [OwlHTTPCall] = []
     @Published public var isInspectorOpened: Bool = false
+
     public var urlSession: URLSession? = .shared
 
     public func addCall(_ call: OwlHTTPCall) {
@@ -61,8 +62,37 @@ public final class OwlService: ObservableObject {
         isInspectorOpened = true
     }
 
+    public func filteredCalls(_ query: String) -> [OwlHTTPCall] {
+        let reversed = calls.reversed()
+
+        guard !query.isEmpty else { return Array(reversed) }
+        return reversed.filter { matches($0, query: query) }
+    }
+
+    private func matches(_ call: OwlHTTPCall, query: String) -> Bool {
+        let normalized = query.lowercased()
+
+        let fields: [String?] = [
+            call.method,
+            call.endpoint,
+            call.server,
+            call.uri,
+            call.response?.status.map { String($0) },
+            call.error?.error.localizedDescription,
+            call.error?.stackTrace
+        ]
+
+        return fields.contains {
+            $0?.lowercased().contains(normalized) ?? false
+        }
+    }
+
     public func closeInspector() {
         isInspectorOpened = false
+    }
+
+    public func calculateStats() -> OwlStats {
+        OwlStats.calculate(from: calls)
     }
 
     public func replay(_ call: OwlHTTPCall) async throws -> (response: HTTPURLResponse, data: Data) {

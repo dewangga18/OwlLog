@@ -16,10 +16,8 @@ public struct OwlStatsView: View {
     }
 
     public var body: some View {
-        NavigationView {
-            content
-                .navigationTitle("Statistics")
-        }
+        content
+            .navigationTitle("Statistics")
     }
 
     @ViewBuilder
@@ -30,7 +28,7 @@ public struct OwlStatsView: View {
             Text("No data available")
                 .foregroundColor(.secondary)
         } else {
-            let stats = OwlStats.calculate(from: calls)
+            let stats = service.calculateStats()
 
             ScrollView {
                 VStack(alignment: .leading, spacing: 24) {

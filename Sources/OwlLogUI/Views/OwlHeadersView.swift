@@ -67,7 +67,7 @@ private extension OwlHeadersView {
     var requestHeadersSection: some View {
         DisclosureGroup("Request Headers") {
             VStack(alignment: .leading, spacing: 4) {
-                ForEach(call.request?.headers.sorted(by: { $0.key < $1.key }) ?? [], id: \.key) { key, value in
+                ForEach(call.request?.sortedHeaders ?? [], id: \.key) { key, value in
                     OwlRowView(title: key, value: value)
                 }
             }
@@ -80,7 +80,7 @@ private extension OwlHeadersView {
     var responseHeadersSection: some View {
         DisclosureGroup("Response Headers") {
             VStack(alignment: .leading, spacing: 4) {
-                ForEach(call.response?.headers.sorted(by: { $0.key < $1.key }) ?? [], id: \.key) { key, value in
+                ForEach(call.response?.sortedHeaders ?? [], id: \.key) { key, value in
                     OwlRowView(title: key, value: value)
                 }
             }

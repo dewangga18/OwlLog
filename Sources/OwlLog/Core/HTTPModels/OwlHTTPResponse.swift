@@ -14,6 +14,10 @@ public struct OwlHTTPResponse: Sendable, Equatable {
     public let body: Data?
     public let headers: [String: String]
 
+    public var sortedHeaders: [(key: String, value: String)] {
+        headers.sorted(by: { $0.key < $1.key })
+    }
+
     public init(
         status: Int? = 0,
         size: Int = 0,

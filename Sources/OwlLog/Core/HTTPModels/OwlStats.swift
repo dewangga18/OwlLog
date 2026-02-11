@@ -1,23 +1,40 @@
 //
-//  OwlStats
+//  OwlStats.swift
 //  OwlLog
 //
 //  Created by aaronevanjulio on 11/02/26.
 //
 
 import Foundation
-import OwlLog
 
-struct OwlStats {
-    let totalCalls: Int
-    let successRate: Double
-    let errorRate: Double
-    let avgResponseTime: Double
-    let statusCodeDistribution: [String: Int]
-    let methodDistribution: [String: Int]
-    let slowestEndpoints: [OwlHTTPCall]
+public struct OwlStats: Sendable {
+    public let totalCalls: Int
+    public let successRate: Double
+    public let errorRate: Double
+    public let avgResponseTime: Double
+    public let statusCodeDistribution: [String: Int]
+    public let methodDistribution: [String: Int]
+    public let slowestEndpoints: [OwlHTTPCall]
 
-    static func calculate(from calls: [OwlHTTPCall]) -> OwlStats {
+    public init(
+        totalCalls: Int,
+        successRate: Double,
+        errorRate: Double,
+        avgResponseTime: Double,
+        statusCodeDistribution: [String: Int],
+        methodDistribution: [String: Int],
+        slowestEndpoints: [OwlHTTPCall]
+    ) {
+        self.totalCalls = totalCalls
+        self.successRate = successRate
+        self.errorRate = errorRate
+        self.avgResponseTime = avgResponseTime
+        self.statusCodeDistribution = statusCodeDistribution
+        self.methodDistribution = methodDistribution
+        self.slowestEndpoints = slowestEndpoints
+    }
+
+    public static func calculate(from calls: [OwlHTTPCall]) -> OwlStats {
         let totalCalls = calls.count
 
         var successCount = 0
