@@ -24,8 +24,6 @@ public struct OwlSummaryHeaderView: View {
     }
     
     public var body: some View {
-        let statusCode = call.response?.status ?? -1
-        
         HStack {
             Text("\(statusText(statusCode)) • \(call.method)")
                 .font(.system(size: 14, weight: .semibold))
@@ -47,6 +45,10 @@ public struct OwlSummaryHeaderView: View {
 }
 
 private extension OwlSummaryHeaderView {
+    var statusCode: Int {
+        call.response?.status ?? -1
+    }
+
     var quickActions: some View {
         HStack(spacing: 12) {
             Button {

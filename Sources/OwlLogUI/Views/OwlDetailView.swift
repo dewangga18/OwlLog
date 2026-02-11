@@ -106,7 +106,7 @@ private extension OwlDetailView {
                     }
                 }
             }
-            .navigationTitle("Http Call Detail")
+            .navigationTitle("")
             .navigationBarTitleDisplayMode(.automatic)
             .if(true) { view in
                 if #available(iOS 26.0, *) {
@@ -140,7 +140,7 @@ private extension OwlDetailView {
                         }
                 }
             }
-            .navigationTitle("Http Call Detail")
+            .navigationTitle("")
         }
     }
 

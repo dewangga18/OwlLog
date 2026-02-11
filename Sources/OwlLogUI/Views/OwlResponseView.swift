@@ -10,7 +10,7 @@ import SwiftUI
 
 public struct OwlResponseView: View {
     private let call: OwlHTTPCall
-    @State private var showFormatted: Bool = true
+    @State private var formattedContent: String = ""
 
     public init(call: OwlHTTPCall) {
         self.call = call
@@ -24,10 +24,13 @@ public struct OwlResponseView: View {
                 EmptyView()
             }
         }
+        .task {
+            prepareContent()
+        }
     }
 }
 
-// MARK:  Main Content
+// MARK: Main Content
 
 private extension OwlResponseView {
     func contentView(body: Any) -> some View {
@@ -38,28 +41,34 @@ private extension OwlResponseView {
             toolbar(contentType: contentType, body: body)
 
             ScrollView {
-                buildContent(contentType: contentType, body: body)
+                buildContent(contentType: contentType)
                     .padding(16)
             }
         }
     }
+
+    func prepareContent() {
+        guard let body = call.response?.body else { return }
+
+        let headers = call.response?.headers ?? [:]
+        let contentType = OwlContentFormatter.detectContentType(headers: headers, body: body)
+
+        switch contentType {
+            case .json:
+                formattedContent = OwlContentFormatter.formatJSON(body)
+            case .xml, .html:
+                formattedContent = OwlContentFormatter.formatXML(body)
+            default:
+                formattedContent = OwlContentFormatter.convertToString(body)
+        }
+    }
 }
 
-// MARK:  Toolbar Content
+// MARK: Toolbar Content
 
 private extension OwlResponseView {
     func toolbar(contentType: OwlContentType, body: Any) -> some View {
         HStack {
-            if contentType == .json || contentType == .xml {
-                Picker("", selection: $showFormatted) {
-                    Label("Formatted", systemImage: "chevron.left.slash.chevron.right")
-                        .tag(true)
-                    Label("Raw", systemImage: "text.alignleft")
-                        .tag(false)
-                }
-                .pickerStyle(.segmented)
-            }
-
             Spacer()
 
             Button {
@@ -74,60 +83,38 @@ private extension OwlResponseView {
     }
 }
 
-// MARK:  Build Content
+// MARK: Build Content
 
 private extension OwlResponseView {
     @ViewBuilder
-    func buildContent(contentType: OwlContentType, body: Any) -> some View {
+    func buildContent(contentType: OwlContentType) -> some View {
         switch contentType {
             case .json:
-                buildJsonContent(body)
+                buildJsonContent()
 
             case .xml, .html:
-                buildXmlContent(body)
+                buildXmlContent()
 
             case .image:
                 buildImageContent()
 
             default:
-                buildTextContent(body)
+                buildTextContent()
         }
     }
 
-    func buildJsonContent(_ body: Any) -> some View {
-        if showFormatted {
-            let formatted = OwlContentFormatter.formatJSON(body)
-            return AnyView(
-                ScrollView(.horizontal) {
-                    Text(formatted)
-                        .font(.system(size: 12, design: .monospaced))
-                        .textSelection(.enabled)
-                }
-            )
-        } else {
-            return AnyView(
-                Text(OwlContentFormatter.convertToString(body))
-                    .font(.system(size: 12, design: .monospaced))
-                    .textSelection(.enabled)
-            )
+    func buildJsonContent() -> some View {
+        ScrollView(.horizontal) {
+            Text(formattedContent)
+                .font(.system(size: 12, design: .monospaced))
+                .textSelection(.enabled)
         }
     }
 
-    func buildXmlContent(_ body: Any) -> some View {
-        if showFormatted {
-            let formatted = OwlContentFormatter.formatXML(body)
-            return AnyView(
-                Text(formatted)
-                    .font(.system(size: 12, design: .monospaced))
-                    .textSelection(.enabled)
-            )
-        } else {
-            return AnyView(
-                Text(OwlContentFormatter.convertToString(body))
-                    .font(.system(size: 12, design: .monospaced))
-                    .textSelection(.enabled)
-            )
-        }
+    func buildXmlContent() -> some View {
+        Text(formattedContent)
+            .font(.system(size: 12, design: .monospaced))
+            .textSelection(.enabled)
     }
 
     func buildImageContent() -> some View {
@@ -147,8 +134,8 @@ private extension OwlResponseView {
         .padding()
     }
 
-    func buildTextContent(_ body: Any) -> some View {
-        Text(OwlContentFormatter.convertToString(body))
+    func buildTextContent() -> some View {
+        Text(formattedContent)
             .font(.system(size: 12, design: .monospaced))
             .textSelection(.enabled)
     }

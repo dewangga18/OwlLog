@@ -159,31 +159,26 @@ private extension OwlLogView {
     // MARK: Empty State View
 
     var emptyStateView: some View {
-        VStack {
-            Spacer()
+        VStack(spacing: 16) {
+            Image(systemName: query.isEmpty ? "tray" : "magnifyingglass")
+                .font(.system(size: 48, weight: .regular))
+                .foregroundStyle(.secondary)
 
-            VStack(spacing: 16) {
-                Image(systemName: query.isEmpty ? "tray" : "magnifyingglass")
-                    .font(.system(size: 48, weight: .regular))
-                    .foregroundStyle(.secondary)
+            Text(query.isEmpty
+                ? "No Logged Data"
+                : "No calls match \"\(query)\"")
+                .font(.headline)
+                .multilineTextAlignment(.center)
 
-                Text(query.isEmpty
-                    ? "No Logged Data"
-                    : "No calls match \"\(query)\"")
-                    .font(.headline)
-                    .multilineTextAlignment(.center)
-
-                Text(query.isEmpty
-                    ? "API requests will appear here once detected."
-                    : "Try adjusting your search or filter.")
-                    .font(.subheadline)
-                    .foregroundStyle(.secondary)
-                    .multilineTextAlignment(.center)
-                    .padding(.horizontal, 24)
-            }
-
-            Spacer()
+            Text(query.isEmpty
+                ? "API requests will appear here once detected."
+                : "Try adjusting your search or filter.")
+                .font(.subheadline)
+                .foregroundStyle(.secondary)
+                .multilineTextAlignment(.center)
+                .padding(.horizontal, 24)
         }
+        .padding(.top, 100)
         .frame(maxWidth: .infinity)
         .listRowBackground(Color.clear)
     }

@@ -16,6 +16,18 @@ public struct OwlStats: Sendable {
     public let methodDistribution: [String: Int]
     public let slowestEndpoints: [OwlHTTPCall]
 
+    public static var zero: OwlStats {
+        OwlStats(
+            totalCalls: 0,
+            successRate: 0,
+            errorRate: 0,
+            avgResponseTime: 0,
+            statusCodeDistribution: [:],
+            methodDistribution: [:],
+            slowestEndpoints: []
+        )
+    }
+
     public init(
         totalCalls: Int,
         successRate: Double,

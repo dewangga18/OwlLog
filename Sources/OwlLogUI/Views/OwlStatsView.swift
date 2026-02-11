@@ -28,10 +28,10 @@ public struct OwlStatsView: View {
             Text("No data available")
                 .foregroundColor(.secondary)
         } else {
-            let stats = service.calculateStats()
-
             ScrollView {
                 VStack(alignment: .leading, spacing: 24) {
+                    let stats = service.stats
+
                     overviewSection(stats)
 
                     distributionSection(
@@ -56,7 +56,7 @@ public struct OwlStatsView: View {
             Text("Overview")
                 .font(.headline)
 
-            HStack {
+            LazyVGrid(columns: [GridItem(.flexible()), GridItem(.flexible())], spacing: 12) {
                 statCard("Total", "\(stats.totalCalls)")
                 statCard("Success", String(format: "%.1f%%", stats.successRate))
                 statCard("Error", String(format: "%.1f%%", stats.errorRate))

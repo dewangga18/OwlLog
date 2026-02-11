@@ -15,12 +15,14 @@ public final class OwlService: ObservableObject {
     private init() {}
 
     @Published public private(set) var calls: [OwlHTTPCall] = []
+    @Published public private(set) var stats: OwlStats = .zero
     @Published public var isInspectorOpened: Bool = false
 
     public var urlSession: URLSession? = .shared
 
     public func addCall(_ call: OwlHTTPCall) {
         calls.append(call)
+        updateStats()
     }
 
     public func addResponse(_ response: OwlHTTPResponse, requestId: Int, duration: Int) {
@@ -36,6 +38,7 @@ public final class OwlService: ObservableObject {
             duration: duration,
             response: response
         )
+        updateStats()
     }
 
     public func addError(_ error: OwlHTTPError, requestId: Int, duration: Int) {
@@ -51,10 +54,12 @@ public final class OwlService: ObservableObject {
             duration: duration,
             error: error
         )
+        updateStats()
     }
 
     public func clearCalls() {
         calls.removeAll()
+        updateStats()
     }
 
     public func openInspector() {
@@ -91,8 +96,8 @@ public final class OwlService: ObservableObject {
         isInspectorOpened = false
     }
 
-    public func calculateStats() -> OwlStats {
-        OwlStats.calculate(from: calls)
+    private func updateStats() {
+        self.stats = OwlStats.calculate(from: calls)
     }
 
     public func replay(_ call: OwlHTTPCall) async throws -> (response: HTTPURLResponse, data: Data) {
