@@ -79,6 +79,16 @@ struct MyApp: App {
 }
 ```
 
+### 🖌 Customization
+You can customize the appearance of the floating button by passing parameters to the initializer:
+
+```swift
+OwlOverlay(
+    backgroundColor: .blue,
+    icon: Image(systemName: "ant.fill")
+)
+```
+
 ---
 
 ## 💡 Best Practice: Staging vs Production

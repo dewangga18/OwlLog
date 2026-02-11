@@ -72,7 +72,7 @@ private extension OwlResponseView {
             Spacer()
 
             Button {
-                UIPasteboard.general.string = String(describing: body)
+                UIPasteboard.general.string = OwlContentFormatter.convertToString(body)
             } label: {
                 Image(systemName: "doc.on.doc")
             }
@@ -88,20 +88,18 @@ private extension OwlResponseView {
 private extension OwlResponseView {
     @ViewBuilder
     func buildContent(contentType: OwlContentType, body: Any) -> some View {
-        do {
-            switch contentType {
-                case .json:
-                    buildJsonContent(body)
+        switch contentType {
+            case .json:
+                buildJsonContent(body)
 
-                case .xml, .html:
-                    buildXmlContent(body)
+            case .xml, .html:
+                buildXmlContent(body)
 
-                case .image:
-                    buildImageContent()
+            case .image:
+                buildImageContent()
 
-                default:
-                    buildTextContent(body)
-            }
+            default:
+                buildTextContent(body)
         }
     }
 
@@ -125,10 +123,8 @@ private extension OwlResponseView {
     }
 
     func buildXmlContent(_ body: Any) -> some View {
-        let bodyString = String(describing: body)
-
         if showFormatted {
-            let formatted = OwlContentFormatter.formatXML(bodyString)
+            let formatted = OwlContentFormatter.formatXML(body)
             return AnyView(
                 Text(formatted)
                     .font(.system(size: 12, design: .monospaced))
@@ -136,7 +132,7 @@ private extension OwlResponseView {
             )
         } else {
             return AnyView(
-                Text(bodyString)
+                Text(OwlContentFormatter.convertToString(body))
                     .font(.system(size: 12, design: .monospaced))
                     .textSelection(.enabled)
             )
@@ -161,7 +157,7 @@ private extension OwlResponseView {
     }
 
     func buildTextContent(_ body: Any) -> some View {
-        Text(String(describing: body))
+        Text(OwlContentFormatter.convertToString(body))
             .font(.system(size: 12, design: .monospaced))
             .textSelection(.enabled)
     }
