@@ -30,15 +30,26 @@ public enum OwlContentFormatter {
         if let headers {
             let contentType = headers["content-type"] ?? headers["Content-Type"]
             if let type = contentType?.lowercased() {
-                if type.contains("json") { return .json }
-                if type.contains("xml") { return .xml }
-                if type.contains("html") { return .html }
-                if type.contains("image") { return .image }
-                if type.contains("text") { return .text }
+                if type.contains("json") {
+                    return .json
+                }
+                if type.contains("xml") {
+                    return .xml
+                }
+                if type.contains("html") {
+                    return .html
+                }
+                if type.contains("image") {
+                    return .image
+                }
+                if type.contains("text") {
+                    return .text
+                }
             }
         }
 
-        if let data = body as? Data, let string = String(data: data, as: UTF8.self) {
+        if let data = body as? Data,
+           let string = String(data: data, encoding: .utf8) {
             return detectFromString(string)
         }
 
@@ -58,16 +69,12 @@ public enum OwlContentFormatter {
 
         if trimmed.hasPrefix("{") || trimmed.hasPrefix("[") {
             if let data = trimmed.data(using: .utf8),
-               (try? JSONSerialization.jsonObject(with: data)) != nil
-            {
+               (try? JSONSerialization.jsonObject(with: data)) != nil {
                 return .json
             }
         }
 
-        if trimmed.hasPrefix("<?xml") || trimmed.hasPrefix("<") {
-            if trimmed.hasPrefix("<!DOCTYPE html") || trimmed.hasPrefix("<html") {
-                return .html
-            }
+        if trimmed.hasPrefix("<") {
             return .xml
         }
 
@@ -79,13 +86,15 @@ public enum OwlContentFormatter {
 
         if let data = json as? Data {
             jsonObject = try? JSONSerialization.jsonObject(with: data)
-        } else if let string = json as? String, let data = string.data(using: .utf8) {
+        } else if let string = json as? String,
+                  let data = string.data(using: .utf8) {
             jsonObject = try? JSONSerialization.jsonObject(with: data)
         } else {
             jsonObject = json
         }
 
-        guard let object = jsonObject, JSONSerialization.isValidJSONObject(object) else {
+        guard let object = jsonObject,
+              JSONSerialization.isValidJSONObject(object) else {
             if let data = json as? Data {
                 return String(decoding: data, as: UTF8.self)
             }
@@ -107,39 +116,38 @@ public enum OwlContentFormatter {
         let xmlString = convertToString(xml)
         var result = ""
         var indent = 0
-        var index = xml.startIndex
+        var index = xmlString.startIndex
 
-        while index < xml.endIndex {
-            if xml[index] == "<" {
-                guard let tagEnd = xml[index...].firstIndex(of: ">") else { break }
-                let tag = String(xml[index ... tagEnd])
+        while index < xmlString.endIndex {
+            if xmlString[index] == "<" {
+                guard let tagEnd = xmlString[index...].firstIndex(of: ">") else {
+                    break
+                }
+                let tag = String(xmlString[index ... tagEnd])
 
                 let isClosing = tag.hasPrefix("</")
                 let isSelfClosing = tag.hasSuffix("/>") || tag.hasPrefix("<?")
 
                 if isClosing {
-                    indent = max(indent - 1, 0)
+                    indent = max(0, indent - 1)
                 }
 
-                if !result.isEmpty && !result.hasSuffix("\n") {
-                    result.append("\n")
-                }
+                result += String(repeating: "  ", count: indent)
+                result += tag + "\n"
 
-                result.append(String(repeating: "  ", count: indent))
-                result.append(tag)
-
-                if !isClosing && !isSelfClosing && !tag.hasPrefix("<!") {
+                if !isClosing && !isSelfClosing {
                     indent += 1
                 }
 
-                index = xml.index(after: tagEnd)
+                index = xmlString.index(after: tagEnd)
             } else {
-                let nextTag = xml[index...].firstIndex(of: "<") ?? xml.endIndex
-                let content = xml[index ..< nextTag]
+                let nextTag = xmlString[index...].firstIndex(of: "<") ?? xmlString.endIndex
+                let content = String(xmlString[index ..< nextTag])
                     .trimmingCharacters(in: .whitespacesAndNewlines)
 
                 if !content.isEmpty {
-                    result.append(content)
+                    result += String(repeating: "  ", count: indent)
+                    result += content + "\n"
                 }
 
                 index = nextTag
@@ -147,5 +155,9 @@ public enum OwlContentFormatter {
         }
 
         return result
+    }
+
+    public static func formatHTML(_ html: Any) -> String {
+        return formatXML(html)
     }
 }
