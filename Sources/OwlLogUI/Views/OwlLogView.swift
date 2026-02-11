@@ -171,14 +171,14 @@ private extension OwlLogView {
                 .multilineTextAlignment(.center)
 
             Text(query.isEmpty
-                ? "API requests will appear here once detected."
-                : "Try adjusting your search or filter.")
+                ? "No network activity detected."
+                : "No matches found.")
                 .font(.subheadline)
                 .foregroundStyle(.secondary)
                 .multilineTextAlignment(.center)
-                .padding(.horizontal, 24)
+                .padding(.horizontal, 20)
         }
-        .padding(.top, 100)
+        .padding(.top, 200)
         .frame(maxWidth: .infinity)
         .listRowBackground(Color.clear)
     }

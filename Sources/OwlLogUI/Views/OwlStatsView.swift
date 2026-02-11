@@ -19,14 +19,15 @@ public struct OwlStatsView: View {
         content
             .navigationTitle("Statistics")
     }
+}
 
+private extension OwlStatsView {
     @ViewBuilder
     private var content: some View {
         let calls = service.calls
 
         if calls.isEmpty {
-            Text("No data available")
-                .foregroundColor(.secondary)
+            emptyStateView
         } else {
             ScrollView {
                 VStack(alignment: .leading, spacing: 24) {
@@ -135,5 +136,25 @@ public struct OwlStatsView: View {
                 .padding(.vertical, 4)
             }
         }
+    }
+
+    private var emptyStateView: some View {
+        VStack(spacing: 16) {
+            Image(systemName: "chart.bar")
+                .font(.system(size: 48, weight: .regular))
+                .foregroundStyle(.secondary)
+
+            Text("No Statistics Yet")
+                .font(.headline)
+                .multilineTextAlignment(.center)
+
+            Text("Waiting for network activity.")
+                .font(.subheadline)
+                .foregroundStyle(.secondary)
+                .multilineTextAlignment(.center)
+                .padding(.horizontal, 20)
+        }
+        .padding(.top, 150)
+        .frame(maxWidth: .infinity)
     }
 }
