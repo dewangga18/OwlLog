@@ -1,0 +1,14 @@
+version: 1
+builder:
+  configs:
+    - platform: ios
+      swift_version: "5.10"
+    - platform: ios
+      swift_version: "6.0"
+    - platform: ios
+      swift_version: "6.1"
+    - platform: ios
+      swift_version: "6.2"
+metadata:
+  exclude_branches:
+    - main
