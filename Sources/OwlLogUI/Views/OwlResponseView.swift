@@ -69,17 +69,29 @@ private extension OwlResponseView {
 private extension OwlResponseView {
     func toolbar(contentType: OwlContentType, body: Any) -> some View {
         HStack {
+            HStack(spacing: 4) {
+                Image(systemName: "info.circle")
+                Text(contentType.rawValue.uppercased())
+            }
+            .font(.caption2.weight(.bold))
+            .foregroundStyle(.secondary)
+            .padding(.horizontal, 8)
+            .padding(.vertical, 4)
+            .background(Color.primary.opacity(0.05))
+            .cornerRadius(4)
+
             Spacer()
 
             Button {
                 UIPasteboard.general.string = OwlContentFormatter.convertToString(body)
             } label: {
-                Image(systemName: "doc.on.doc")
+                Label("Copy Response", systemImage: "doc.on.doc")
+                    .font(.subheadline)
             }
         }
         .padding(.horizontal, 16)
-        .padding(.vertical, 8)
-        .background(Color(.systemGray6))
+        .padding(.vertical, 10)
+        .background(Color(.secondarySystemBackground))
     }
 }
 

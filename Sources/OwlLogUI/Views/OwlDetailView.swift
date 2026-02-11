@@ -28,7 +28,7 @@ public struct OwlDetailView: View {
                     Button {
                         UIPasteboard.general.string = call.request?.curl ?? ""
                     } label: {
-                        Image(systemName: "doc.on.doc")
+                        Label("Copy cURL", systemImage: "doc.on.doc")
                     }
                 }
             }
@@ -106,8 +106,8 @@ private extension OwlDetailView {
                     }
                 }
             }
-            .navigationTitle("")
-            .navigationBarTitleDisplayMode(.automatic)
+            .navigationTitle(call.endpoint)
+            .navigationBarTitleDisplayMode(.inline)
             .if(true) { view in
                 if #available(iOS 26.0, *) {
                     view.tabBarMinimizeBehavior(.onScrollDown)
@@ -140,7 +140,8 @@ private extension OwlDetailView {
                         }
                 }
             }
-            .navigationTitle("")
+            .navigationTitle(call.endpoint)
+            .navigationBarTitleDisplayMode(.inline)
         }
     }
 
