@@ -15,7 +15,7 @@ public final class OwlService: ObservableObject {
     private init() {}
 
     @Published public private(set) var calls: [OwlHTTPCall] = []
-    @Published public private(set) var isInspectorOpened: Bool = false
+    @Published public var isInspectorOpened: Bool = false
     public var urlSession: URLSession? = .shared
 
     public func addCall(_ call: OwlHTTPCall) {

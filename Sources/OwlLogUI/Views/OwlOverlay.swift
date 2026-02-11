@@ -66,6 +66,9 @@ public struct OwlOverlay: View {
                     .animation(.easeInOut(duration: 0.1), value: position)
             }
         }
+        .fullScreenCover(isPresented: $service.isInspectorOpened) {
+            OwlLogView(service: service)
+        }
     }
 }
 

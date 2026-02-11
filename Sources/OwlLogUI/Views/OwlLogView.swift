@@ -47,6 +47,12 @@ private extension OwlLogView {
         .navigationTitle(isSearching ? "" : "Owl Log")
         .searchable(text: $query, placement: .navigationBarDrawer(displayMode: .always))
         .toolbar {
+            ToolbarItem(placement: .topBarLeading) {
+                Button("Done") {
+                    service.closeInspector()
+                }
+            }
+
             ToolbarItemGroup(placement: .topBarTrailing) {
                 Button {
                     isSearching.toggle()
