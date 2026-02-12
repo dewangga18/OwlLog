@@ -28,7 +28,10 @@ public struct OwlDetailView: View {
                     Button {
                         OwlClipboard.copy(call.request?.curl ?? "")
                     } label: {
-                        Label("Copy cURL", systemImage: "doc.on.doc")
+                        HStack {
+                            Image(systemName: "doc.on.doc")
+                            Text("Copy cURL")
+                        }
                     }
                 }
             }
@@ -143,20 +146,20 @@ private extension OwlDetailView {
                 isReplaying: isReplaying
             )
             .tabItem {
-                Label("Headers", systemImage: "list.bullet.rectangle.portrait")
+                Label("Headers", systemImage: "network")
             }
 
             if call.response != nil {
                 OwlResponseView(call: call)
                     .tabItem {
-                        Label("Response", systemImage: "arrow.uturn.backward.circle")
+                        Label("Response", systemImage: "doc.text.image")
                     }
             }
 
             if call.error != nil {
                 OwlErrorView(call: call)
                     .tabItem {
-                        Label("Error", systemImage: "exclamationmark.triangle")
+                        Label("Error", systemImage: "xmark.octagon")
                     }
             }
         }

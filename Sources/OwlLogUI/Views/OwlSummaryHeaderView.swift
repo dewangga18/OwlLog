@@ -25,13 +25,15 @@ public struct OwlSummaryHeaderView: View {
 
     public var body: some View {
         HStack {
-            Text(call.endpoint)
-                .font(.system(size: 14, weight: .medium))
-                .lineLimit(1)
+            VStack(alignment: .leading) {
+                Text(" [\(call.method) • \(statusText(statusCode))]")
+                    .font(.system(size: 14, weight: .semibold))
+                    .foregroundColor(statusColor(statusCode))
 
-            Text(" [\(call.method) • \(statusText(statusCode))]")
-                .font(.system(size: 14, weight: .semibold))
-                .foregroundColor(statusColor(statusCode))
+                Text(call.endpoint)
+                    .font(.system(size: 14, weight: .medium))
+                    .lineLimit(1)
+            }
 
             Spacer()
 
@@ -72,7 +74,7 @@ private extension OwlSummaryHeaderView {
             Button {
                 OwlClipboard.copy(call.uri)
             } label: {
-                Label("Copy URL", systemImage: "doc.on.doc")
+                Label("URL", systemImage: "doc.on.doc")
             }
 
             if let onReplay {
@@ -83,7 +85,7 @@ private extension OwlSummaryHeaderView {
                         ProgressView()
                             .scaleEffect(0.6)
                     } else {
-                        Image(systemName: "arrow.clockwise")
+                        Label("Replay", systemImage: "arrow.clockwise")
                     }
                 }
                 .disabled(isReplaying)
