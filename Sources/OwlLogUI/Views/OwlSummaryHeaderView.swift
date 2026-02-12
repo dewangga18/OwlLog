@@ -39,7 +39,8 @@ public struct OwlSummaryHeaderView: View {
 
             quickActions
         }
-        .padding(.horizontal, 8)
+        .padding(.leading, 4)
+        .padding(.trailing, 8)
         .padding(.vertical, 12)
     }
 }
