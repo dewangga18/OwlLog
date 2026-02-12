@@ -58,6 +58,19 @@ private extension OwlLogView {
     var filteredCalls: [OwlHTTPCall] {
         service.filteredCalls(query)
     }
+
+    func statusCode(call: OwlHTTPCall) -> Int {
+        call.response?.status ?? -1
+    }
+
+    func statusColor(_ code: Int) -> Color {
+        switch code {
+            case 200..<300: return .green
+            case 300..<400: return .orange
+            case 400...: return .red
+            default: return .red
+        }
+    }
 }
 
 // MARK: - View Builders
@@ -146,6 +159,7 @@ private extension OwlLogView {
             }
             .padding(.vertical, 6)
         }
+        .buttonStyle(.plain)
         .disabled(call.response?.status == nil)
     }
 
@@ -156,7 +170,7 @@ private extension OwlLogView {
         if let status = call.response?.status {
             Text("\(status)")
                 .fontWeight(.semibold)
-                .foregroundColor(call.error != nil ? .red : .green)
+                .foregroundColor(statusColor(statusCode(call: call)))
         } else {
             ProgressView()
                 .scaleEffect(0.7)

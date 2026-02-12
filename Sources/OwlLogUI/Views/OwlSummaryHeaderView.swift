@@ -59,9 +59,8 @@ private extension OwlSummaryHeaderView {
     func statusColor(_ code: Int) -> Color {
         switch code {
         case 200..<300: return .green
-        case 300..<400: return .blue
-        case 400..<500: return .orange
-        case 500...: return .red
+        case 300..<400: return .orange
+        case 400...: return .red
         default: return .red
         }
     }

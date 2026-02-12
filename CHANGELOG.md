@@ -2,9 +2,14 @@
 
 All notable changes to the OwlLog project will be documented in this file.
 
+## [1.0.4] - 2026-02-12
+
+### Added
+- Update HTTP status code to be more readable.
+
 ## [1.0.3] - 2026-02-12
 
-### Fixes
+### Fix
 - Fixed an issue where `OwlHTTPCall` could contain duplicated IDs, causing inconsistencies in the HTTP call list.
 
 ## [1.0.2] - 2026-02-12
