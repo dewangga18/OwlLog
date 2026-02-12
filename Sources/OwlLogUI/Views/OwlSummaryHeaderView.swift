@@ -26,7 +26,7 @@ public struct OwlSummaryHeaderView: View {
     public var body: some View {
         HStack {
             VStack(alignment: .leading) {
-                Text(" [\(call.method) • \(statusText(statusCode))]")
+                Text("[\(call.method) • \(statusText(statusCode))]")
                     .font(.system(size: 14, weight: .semibold))
                     .foregroundColor(statusColor(statusCode))
 
@@ -39,7 +39,7 @@ public struct OwlSummaryHeaderView: View {
 
             quickActions
         }
-        .padding(.horizontal, 16)
+        .padding(.horizontal, 8)
         .padding(.vertical, 12)
     }
 }

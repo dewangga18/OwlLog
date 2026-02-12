@@ -30,7 +30,7 @@ public struct OwlDetailView: View {
                     } label: {
                         HStack {
                             Image(systemName: "doc.on.doc")
-                            Text("Copy cURL")
+                            Text("cURL")
                         }
                     }
                 }
