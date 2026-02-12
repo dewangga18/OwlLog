@@ -8,7 +8,7 @@
 import Foundation
 
 public struct OwlHTTPCall: Sendable, Equatable, Identifiable {
-    public let id: Int
+    public let id: String
     public let createdTime: Date
     public let client: String
     public let loading: Bool
@@ -24,7 +24,7 @@ public struct OwlHTTPCall: Sendable, Equatable, Identifiable {
     public let error: OwlHTTPError?
 
     public init(
-        id: Int,
+        id: String,
         createdTime: Date = Date(),
         client: String = "",
         loading: Bool = true,
@@ -54,7 +54,7 @@ public struct OwlHTTPCall: Sendable, Equatable, Identifiable {
     }
 
     public func copy(
-        id: Int? = nil,
+        id: String? = nil,
         createdTime: Date? = nil,
         client: String? = nil,
         loading: Bool? = nil,

@@ -27,8 +27,9 @@ public actor OwlLogger {
         calls.append(call)
     }
     
-    public func addResponse(_ response: OwlHTTPResponse, requestId: Int) {
+    public func addResponse(_ response: OwlHTTPResponse, requestId: String) {
         guard let index = calls.firstIndex(where: { $0.id == requestId }) else {
+            print("⚠️ No call found with id \(requestId)")
             return
         }
         
@@ -42,8 +43,9 @@ public actor OwlLogger {
         )
     }
     
-    public func addError(_ error: OwlHTTPError, requestId: Int) {
+    public func addError(_ error: OwlHTTPError, requestId: String) {
         guard let index = calls.firstIndex(where: { $0.id == requestId }) else {
+            print("⚠️ No call found with id \(requestId)")
             return
         }
         

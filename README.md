@@ -26,7 +26,7 @@ Add the package to your project and choose the target that fits your needs:
 **Package.swift Integration:**
 ```swift
 dependencies: [
-    .package(url: "https://github.com/dewangga18/OwlLog.git", from: "1.0.2")
+    .package(url: "https://github.com/dewangga18/OwlLog.git", from: "1.0.3")
 ]
 ```
 

@@ -25,7 +25,7 @@ public final class OwlService: ObservableObject {
         updateStats()
     }
 
-    public func addResponse(_ response: OwlHTTPResponse, requestId: Int, duration: Int) {
+    public func addResponse(_ response: OwlHTTPResponse, requestId: String, duration: Int) {
         guard let index = calls.firstIndex(where: { $0.id == requestId }) else {
             print("⚠️ No call found with id \(requestId)")
             return
@@ -41,7 +41,7 @@ public final class OwlService: ObservableObject {
         updateStats()
     }
 
-    public func addError(_ error: OwlHTTPError, requestId: Int, duration: Int) {
+    public func addError(_ error: OwlHTTPError, requestId: String, duration: Int) {
         guard let index = calls.firstIndex(where: { $0.id == requestId }) else {
             print("⚠️ No call found with id \(requestId)")
             return

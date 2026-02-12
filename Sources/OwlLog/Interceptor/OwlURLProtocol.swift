@@ -42,7 +42,7 @@ public final class OwlURLProtocol: URLProtocol {
 
         let newRequest = mutableRequest as URLRequest
 
-        let id = newRequest.hashValue
+        let id = UUID().uuidString
         let startTime = Date()
 
         let requestModel = OwlHTTPRequest(
