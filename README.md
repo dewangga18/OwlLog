@@ -12,22 +12,43 @@ Why use OwlLog?
 
 ### Swift Package Manager (SPM)
 
-Add the following to your `Package.swift` file:
+Add the package to your project and choose the target that fits your needs:
 
+| Target | Description | Recommended For |
+| :--- | :--- | :--- |
+| **`OwlLog`** | **Core Only**. Logic-only interceptor. Logs directly to Xcode Console. | Console-only debugging. |
+| **`OwlLogUI`** | **Full Package**. Includes the core logic + Floating Visualizer Overlay. | QA, Manual Testing, and UI-based debugging. |
+
+> **Note**: `OwlLogUI` automatically exports `OwlLog`. If you use the UI package, you don't need to import `OwlLog` separately.
+
+<br>
+
+**Package.swift Integration:**
 ```swift
 dependencies: [
-    .package(url: "https://github.com/dewangga18/OwlLog.git", from: "1.0.1")
+    .package(url: "https://github.com/dewangga18/OwlLog.git", from: "1.0.2")
 ]
 ```
 
-Or in Xcode:0
+**Target Dependencies:**
+```swift
+.target(
+    name: "MyAppTarget",
+    dependencies: [
+        .product(name: "OwlLogUI", package: "OwlLog") // Use "OwlLog" if you don't need the UI
+    ]
+)
+```
+
+---
+
+Or in Xcode:
 1. Go to **File** → **Add Package Dependencies...**
 2. Enter the repository URL: `https://github.com/dewangga18/OwlLog.git`
 3. Select the version you want to use
 4. Click **Add Package**
 
-
----
+<br>
 
 ## 📡 Network Service Usage
 
@@ -38,6 +59,8 @@ You should only add `OwlURLProtocol` to your `URLSessionConfiguration` if the en
 
 ```swift
 import OwlLog
+// or your can import OwlLogUI if you want to use the UI
+// import OwlLogUI
 
 func createURLSession() -> URLSession {
     let config = URLSessionConfiguration.default
@@ -81,6 +104,8 @@ struct MyApp: App {
     }
 }
 ```
+
+---
 
 ### 🖌 Customization
 You can customize the appearance of the floating button by passing parameters to the initializer:

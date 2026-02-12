@@ -2,6 +2,17 @@
 
 All notable changes to the OwlLog project will be documented in this file.
 
+## [1.0.2] - 2026-02-12
+
+### Added
+- **Exported Imports**: Added `@_exported import OwlLog` in `OwlLogUI`. Users now only need to `import OwlLogUI` to access both core interceptor and UI features.
+- **Multi-Platform Refinement**: Optimized build configuration to support **iOS** and **macOS** across Swift versions 5.10, 6.0, 6.1, and 6.2.
+- **Unified Clipboard & UI**: Integrated cross-platform clipboard handling and navigation patterns for better consistency between iOS and macOS.
+
+### Changed
+- **Documentation Overhaul**: Updated `README.md` with a target selection guide (Core vs. Full Package) and simplified integration steps.
+- **Code Quality**: Improved code organization using `MARK` comments and refined platform-specific UI adaptive logic.
+
 ## [1.0.1] - 2026-02-12
 
 ### Added
