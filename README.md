@@ -1,3 +1,4 @@
+<img width="4717" height="5957" alt="SDK Banner-1" src="https://github.com/user-attachments/assets/9b6ae16a-c380-4f54-9aeb-ebfe9aa34996" /> <br>
 # OwlLog 🦉
 
 **OwlLog** is a lightweight and powerful iOS SDK for real-time HTTP/HTTPS network traffic monitoring directly on the device. Built entirely with modern Swift, it supports Swift 5.9+, Swift 6 Concurrency, and SwiftUI.
@@ -118,7 +119,6 @@ OwlOverlay(
 
 ---
 
-## 🔒 Security & Concurrency
 OwlLog is built with the latest Swift standards:
 - **Actors**: Uses the `OwlLogger` actor to prevent data races.
 - **Sendable**: All data models conform to the `Sendable` protocol, ensuring safety in Swift 6 Strict Concurrency environments.
