@@ -127,9 +127,7 @@ private extension OwlLogView {
 
     func callRow(_ call: OwlHTTPCall) -> some View {
         NavigationLink {
-            if call.response?.status != nil {
-                OwlDetailView(call: call)
-            }
+            OwlDetailView(call: call)
         } label: {
             VStack(alignment: .leading, spacing: 6) {
                 HStack {

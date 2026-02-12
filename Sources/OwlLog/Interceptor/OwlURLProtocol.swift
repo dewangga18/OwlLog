@@ -110,10 +110,11 @@ public final class OwlURLProtocol: URLProtocol {
                 let stackTrace = Thread.callStackSymbols.joined(separator: "\n")
                 var errorModel = OwlHTTPError(
                     error: error,
+                    stackTrace: stackTrace
                 )
 
                 if let error = error as? URLError {
-                    errorModel = errorModel.copy(stackTrace: stackTrace, code: error.errorCode)
+                    errorModel = errorModel.copy(code: error.errorCode)
                 }
 
                 Task { @MainActor in
