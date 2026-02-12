@@ -30,23 +30,9 @@ public struct OwlResponseView: View {
     }
 }
 
-// MARK: - Main Content
+// MARK: - Funcions
 
 private extension OwlResponseView {
-    func contentView(body: Any) -> some View {
-        let headers = call.response?.headers ?? [:]
-        let contentType = OwlContentFormatter.detectContentType(headers: headers, body: body)
-
-        return VStack(spacing: 0) {
-            toolbar(contentType: contentType, body: body)
-
-            ScrollView {
-                buildContent(contentType: contentType)
-                    .padding(16)
-            }
-        }
-    }
-
     func prepareContent() {
         guard let body = call.response?.body else { return }
 
@@ -64,9 +50,27 @@ private extension OwlResponseView {
     }
 }
 
-// MARK: - Toolbar Content
+// MARK: - Views
 
 private extension OwlResponseView {
+    // MARK: - Main Content
+
+    func contentView(body: Any) -> some View {
+        let headers = call.response?.headers ?? [:]
+        let contentType = OwlContentFormatter.detectContentType(headers: headers, body: body)
+
+        return VStack(spacing: 0) {
+            toolbar(contentType: contentType, body: body)
+
+            ScrollView {
+                buildContent(contentType: contentType)
+                    .padding(16)
+            }
+        }
+    }
+
+    // MARK: - Toolbar Content
+
     func toolbar(contentType: OwlContentType, body: Any) -> some View {
         HStack {
             HStack(spacing: 4) {
@@ -80,12 +84,15 @@ private extension OwlResponseView {
             .background(Color.primary.opacity(0.05))
             .cornerRadius(4)
 
+            Text("\(call.response?.body?.count ?? 0) bytes")
+                .font(.caption2.weight(.bold))
+
             Spacer()
 
             Button {
                 OwlClipboard.copy(OwlContentFormatter.convertToString(body))
             } label: {
-                Label("Copy Response", systemImage: "doc.on.doc")
+                Label("Response", systemImage: "doc.on.doc")
                     .font(.subheadline)
             }
         }
@@ -93,11 +100,9 @@ private extension OwlResponseView {
         .padding(.vertical, 10)
         .background(Color.owlSecondaryBackground)
     }
-}
 
-// MARK: - Build Content
+    // MARK: - Build Content
 
-private extension OwlResponseView {
     @ViewBuilder
     func buildContent(contentType: OwlContentType) -> some View {
         switch contentType {

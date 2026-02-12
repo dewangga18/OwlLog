@@ -22,7 +22,6 @@ public struct OwlStatsView: View {
 }
 
 private extension OwlStatsView {
-
     // MARK: - Content
 
     @ViewBuilder
@@ -103,8 +102,10 @@ private extension OwlStatsView {
                     GeometryReader { geo in
                         Rectangle()
                             .fill(Color.blue.opacity(0.5))
-                            .frame(width: geo.size.width * CGFloat(value) / CGFloat(max(1, service.calls.count)),
-                                   height: 20)
+                            .frame(
+                                width: geo.size.width * CGFloat(value) / CGFloat(max(1, service.calls.count)),
+                                height: 20
+                            )
                     }
                     .frame(height: 20)
 

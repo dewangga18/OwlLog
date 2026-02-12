@@ -45,7 +45,6 @@ public struct OwlHeadersView: View {
 }
 
 private extension OwlHeadersView {
-    
     // MARK: - General Section
 
     var generalSection: some View {
@@ -58,6 +57,7 @@ private extension OwlHeadersView {
                     value: "\(call.response?.status ?? -1)"
                 )
             }
+            .frame(maxWidth: .infinity, alignment: .leading)
             .padding(.top, 8)
         }
     }
@@ -71,6 +71,7 @@ private extension OwlHeadersView {
                     OwlRowView(title: key, value: value)
                 }
             }
+            .frame(maxWidth: .infinity, alignment: .leading)
             .padding(.top, 8)
         }
     }
@@ -84,11 +85,12 @@ private extension OwlHeadersView {
                     OwlRowView(title: key, value: value)
                 }
             }
+            .frame(maxWidth: .infinity, alignment: .leading)
             .padding(.top, 8)
         }
     }
 
-    // MARK: -Form Data Section
+    // MARK: - Form Data Section
 
     var formDataFieldsSection: some View {
         Group {
@@ -99,6 +101,7 @@ private extension OwlHeadersView {
                             OwlRowView(title: field.name, value: field.value)
                         }
                     }
+                    .frame(maxWidth: .infinity, alignment: .leading)
                     .padding(.top, 8)
                 }
             }
@@ -119,6 +122,7 @@ private extension OwlHeadersView {
                             )
                         }
                     }
+                    .frame(maxWidth: .infinity, alignment: .leading)
                     .padding(.top, 8)
                 }
             }

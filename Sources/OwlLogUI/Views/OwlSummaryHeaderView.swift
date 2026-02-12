@@ -5,14 +5,14 @@
 //  Created by aaronevanjulio on 11/02/26.
 //
 
-import SwiftUI
 import OwlLog
+import SwiftUI
 
 public struct OwlSummaryHeaderView: View {
     let call: OwlHTTPCall
     let onReplay: (() -> Void)?
     let isReplaying: Bool
-    
+
     public init(
         call: OwlHTTPCall,
         onReplay: (() -> Void)? = nil,
@@ -22,21 +22,19 @@ public struct OwlSummaryHeaderView: View {
         self.onReplay = onReplay
         self.isReplaying = isReplaying
     }
-    
+
     public var body: some View {
         HStack {
-            Text("\(statusText(statusCode)) • \(call.method)")
-                .font(.system(size: 14, weight: .semibold))
-                .foregroundColor(statusColor(statusCode))
-            
-            Spacer()
-            
             Text(call.endpoint)
                 .font(.system(size: 14, weight: .medium))
                 .lineLimit(1)
-            
+
+            Text(" [\(call.method) • \(statusText(statusCode))]")
+                .font(.system(size: 14, weight: .semibold))
+                .foregroundColor(statusColor(statusCode))
+
             Spacer()
-            
+
             quickActions
         }
         .padding(.horizontal, 16)
@@ -54,7 +52,7 @@ private extension OwlSummaryHeaderView {
     func statusText(_ code: Int) -> String {
         code == -1 ? "ERROR" : "\(code)"
     }
-    
+
     func statusColor(_ code: Int) -> Color {
         switch code {
         case 200..<300: return .green
@@ -74,9 +72,9 @@ private extension OwlSummaryHeaderView {
             Button {
                 OwlClipboard.copy(call.uri)
             } label: {
-                Image(systemName: "doc.on.doc")
+                Label("Copy URL", systemImage: "doc.on.doc")
             }
-            
+
             if let onReplay {
                 Button {
                     onReplay()
@@ -92,5 +90,4 @@ private extension OwlSummaryHeaderView {
             }
         }
     }
-    
 }

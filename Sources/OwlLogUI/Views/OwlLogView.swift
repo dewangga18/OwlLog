@@ -52,12 +52,9 @@ public struct OwlLogView: View {
     }
 }
 
-// MARK: - Variables 
+// MARK: - Computed Variables
 
 private extension OwlLogView {
-    
-    // MARK: - Filtered Calls
-
     var filteredCalls: [OwlHTTPCall] {
         service.filteredCalls(query)
     }
@@ -66,7 +63,6 @@ private extension OwlLogView {
 // MARK: - View Builders
 
 private extension OwlLogView {
-    
     // MARK: - Body view
 
     var bodyView: some View {

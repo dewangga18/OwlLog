@@ -88,7 +88,6 @@ private extension OwlDetailView {
 // MARK: - Views
 
 private extension OwlDetailView {
-
     // MARK: - Tab View
 
     @ViewBuilder
@@ -120,7 +119,7 @@ private extension OwlDetailView {
             .owlNavigationBarTitleDisplayModeInline()
             .if(true) { view in
                 if #available(iOS 26.0, *) {
-                view.tabBarMinimizeBehavior(.onScrollDown)
+                    view.tabBarMinimizeBehavior(.onScrollDown)
                 } else {
                     view
                 }

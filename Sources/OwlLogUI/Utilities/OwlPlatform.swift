@@ -8,7 +8,7 @@ import AppKit
 
 // MARK: - Clipboard
 
-public struct OwlClipboard {
+public enum OwlClipboard {
     public static func copy(_ text: String) {
         #if canImport(UIKit)
         UIPasteboard.general.string = text
@@ -33,8 +33,10 @@ extension View {
     }
 }
 
-extension Color {
-    public static var owlSecondaryBackground: Color {
+// MARK: - Color
+
+public extension Color {
+    static var owlSecondaryBackground: Color {
         #if canImport(UIKit)
         return Color(UIColor.secondarySystemBackground)
         #elseif canImport(AppKit)
@@ -45,16 +47,18 @@ extension Color {
     }
 }
 
-extension ToolbarItemPlacement {
-    public static var owlTrailing: ToolbarItemPlacement {
+// MARK: - Toolbar Item
+
+public extension ToolbarItemPlacement {
+    static var owlTrailing: ToolbarItemPlacement {
         #if os(iOS)
         return .topBarTrailing
         #else
         return .automatic
         #endif
     }
-    
-    public static var owlLeading: ToolbarItemPlacement {
+
+    static var owlLeading: ToolbarItemPlacement {
         #if os(iOS)
         return .topBarLeading
         #else
@@ -63,8 +67,10 @@ extension ToolbarItemPlacement {
     }
 }
 
-extension SearchFieldPlacement {
-    public static var owlAutomatic: SearchFieldPlacement {
+// MARK: - Search Field Placement
+
+public extension SearchFieldPlacement {
+    static var owlAutomatic: SearchFieldPlacement {
         #if os(iOS)
         return .navigationBarDrawer(displayMode: .always)
         #else
