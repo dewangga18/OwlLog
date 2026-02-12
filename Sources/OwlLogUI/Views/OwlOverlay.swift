@@ -28,8 +28,8 @@ public struct OwlOverlay: View {
     }
 
     public var body: some View {
+        #if os(iOS)
         GeometryReader { geo in
-
             if !service.isInspectorOpened {
                 Circle()
                     .fill(backgroundColor)
@@ -69,6 +69,15 @@ public struct OwlOverlay: View {
         .fullScreenCover(isPresented: $service.isInspectorOpened) {
             OwlLogView(service: service)
         }
+        #elseif os(macOS)
+        EmptyView()
+            .sheet(isPresented: $service.isInspectorOpened) {
+                OwlLogView(service: service)
+                    .frame(minWidth: 500, minHeight: 600)
+            }
+        #else
+        EmptyView()
+        #endif
     }
 }
 

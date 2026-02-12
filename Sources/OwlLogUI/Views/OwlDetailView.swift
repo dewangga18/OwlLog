@@ -24,9 +24,9 @@ public struct OwlDetailView: View {
     public var body: some View {
         tabView
             .toolbar {
-                ToolbarItem(placement: .topBarTrailing) {
+                ToolbarItem(placement: .owlTrailing) {
                     Button {
-                        UIPasteboard.general.string = call.request?.curl ?? ""
+                        OwlClipboard.copy(call.request?.curl ?? "")
                     } label: {
                         Label("Copy cURL", systemImage: "doc.on.doc")
                     }
@@ -40,7 +40,7 @@ public struct OwlDetailView: View {
                         if let data = replayData,
                            let string = String(data: data, encoding: .utf8)
                         {
-                            UIPasteboard.general.string = string
+                            OwlClipboard.copy(string)
                         }
                     }
                 }
@@ -49,6 +49,8 @@ public struct OwlDetailView: View {
             }
     }
 }
+
+// MARK: - Functions
 
 private extension OwlDetailView {
     func handleReplay() {
@@ -81,9 +83,17 @@ private extension OwlDetailView {
             }
         }
     }
+}
+
+// MARK: - Views
+
+private extension OwlDetailView {
+
+    // MARK: - Tab View
 
     @ViewBuilder
     var tabView: some View {
+        #if swift(>=6.0)
         if #available(iOS 18.0, *) {
             TabView {
                 Tab("Headers", systemImage: "network") {
@@ -107,43 +117,55 @@ private extension OwlDetailView {
                 }
             }
             .navigationTitle("Call Details")
-            .navigationBarTitleDisplayMode(.inline)
+            .owlNavigationBarTitleDisplayModeInline()
             .if(true) { view in
                 if #available(iOS 26.0, *) {
-                    view.tabBarMinimizeBehavior(.onScrollDown)
+                view.tabBarMinimizeBehavior(.onScrollDown)
                 } else {
                     view
                 }
             }
         } else {
-            TabView {
-                OwlHeadersView(
-                    call: call,
-                    onReplay: OwlService.shared.urlSession != nil ? handleReplay : nil,
-                    isReplaying: isReplaying
-                )
-                .tabItem {
-                    Label("Headers", systemImage: "list.bullet.rectangle.portrait")
-                }
-
-                if call.response != nil {
-                    OwlResponseView(call: call)
-                        .tabItem {
-                            Label("Response", systemImage: "arrow.uturn.backward.circle")
-                        }
-                }
-
-                if call.error != nil {
-                    OwlErrorView(call: call)
-                        .tabItem {
-                            Label("Error", systemImage: "exclamationmark.triangle")
-                        }
-                }
-            }
-            .navigationTitle("Call Details")
-            .navigationBarTitleDisplayMode(.inline)
+            fallbackTabView
         }
+        #else
+        fallbackTabView
+        #endif
     }
+
+    // MARK: - Fallback Tab View
+
+    @ViewBuilder
+    var fallbackTabView: some View {
+        TabView {
+            OwlHeadersView(
+                call: call,
+                onReplay: OwlService.shared.urlSession != nil ? handleReplay : nil,
+                isReplaying: isReplaying
+            )
+            .tabItem {
+                Label("Headers", systemImage: "list.bullet.rectangle.portrait")
+            }
+
+            if call.response != nil {
+                OwlResponseView(call: call)
+                    .tabItem {
+                        Label("Response", systemImage: "arrow.uturn.backward.circle")
+                    }
+            }
+
+            if call.error != nil {
+                OwlErrorView(call: call)
+                    .tabItem {
+                        Label("Error", systemImage: "exclamationmark.triangle")
+                    }
+            }
+        }
+        .navigationTitle("Call Details")
+        .owlNavigationBarTitleDisplayModeInline()
+    }
+
+    // MARK: - Replay Message
 
     @ViewBuilder
     var replayMessage: some View {

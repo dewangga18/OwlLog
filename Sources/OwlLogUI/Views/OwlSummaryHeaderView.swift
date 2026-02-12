@@ -44,15 +44,35 @@ public struct OwlSummaryHeaderView: View {
     }
 }
 
+// MARK: - Computed Properties & Functions
+
 private extension OwlSummaryHeaderView {
     var statusCode: Int {
         call.response?.status ?? -1
     }
 
+    func statusText(_ code: Int) -> String {
+        code == -1 ? "ERROR" : "\(code)"
+    }
+    
+    func statusColor(_ code: Int) -> Color {
+        switch code {
+        case 200..<300: return .green
+        case 300..<400: return .blue
+        case 400..<500: return .orange
+        case 500...: return .red
+        default: return .red
+        }
+    }
+}
+
+// MARK: - Computed Views
+
+private extension OwlSummaryHeaderView {
     var quickActions: some View {
         HStack(spacing: 12) {
             Button {
-                UIPasteboard.general.string = call.uri
+                OwlClipboard.copy(call.uri)
             } label: {
                 Image(systemName: "doc.on.doc")
             }
@@ -73,17 +93,4 @@ private extension OwlSummaryHeaderView {
         }
     }
     
-    func statusText(_ code: Int) -> String {
-        code == -1 ? "ERROR" : "\(code)"
-    }
-    
-    func statusColor(_ code: Int) -> Color {
-        switch code {
-        case 200..<300: return .green
-        case 300..<400: return .blue
-        case 400..<500: return .orange
-        case 500...: return .red
-        default: return .red
-        }
-    }
 }

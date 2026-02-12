@@ -30,7 +30,7 @@ public struct OwlResponseView: View {
     }
 }
 
-// MARK: Main Content
+// MARK: - Main Content
 
 private extension OwlResponseView {
     func contentView(body: Any) -> some View {
@@ -64,7 +64,7 @@ private extension OwlResponseView {
     }
 }
 
-// MARK: Toolbar Content
+// MARK: - Toolbar Content
 
 private extension OwlResponseView {
     func toolbar(contentType: OwlContentType, body: Any) -> some View {
@@ -83,7 +83,7 @@ private extension OwlResponseView {
             Spacer()
 
             Button {
-                UIPasteboard.general.string = OwlContentFormatter.convertToString(body)
+                OwlClipboard.copy(OwlContentFormatter.convertToString(body))
             } label: {
                 Label("Copy Response", systemImage: "doc.on.doc")
                     .font(.subheadline)
@@ -91,11 +91,11 @@ private extension OwlResponseView {
         }
         .padding(.horizontal, 16)
         .padding(.vertical, 10)
-        .background(Color(.secondarySystemBackground))
+        .background(Color.owlSecondaryBackground)
     }
 }
 
-// MARK: Build Content
+// MARK: - Build Content
 
 private extension OwlResponseView {
     @ViewBuilder

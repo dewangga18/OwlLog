@@ -46,7 +46,7 @@ public struct OwlHeadersView: View {
 
 private extension OwlHeadersView {
     
-    // MARK: General Section
+    // MARK: - General Section
 
     var generalSection: some View {
         DisclosureGroup("General") {
@@ -62,7 +62,7 @@ private extension OwlHeadersView {
         }
     }
 
-    // MARK:  Request Headers Section
+    // MARK: - Request Headers Section
 
     var requestHeadersSection: some View {
         DisclosureGroup("Request Headers") {
@@ -75,7 +75,7 @@ private extension OwlHeadersView {
         }
     }
 
-    // MARK:  Response Headers Section
+    // MARK: - Response Headers Section
 
     var responseHeadersSection: some View {
         DisclosureGroup("Response Headers") {
@@ -88,7 +88,7 @@ private extension OwlHeadersView {
         }
     }
 
-    // MARK:  Form Data Section
+    // MARK: -Form Data Section
 
     var formDataFieldsSection: some View {
         Group {
@@ -105,7 +105,7 @@ private extension OwlHeadersView {
         }
     }
 
-    // MARK:  Form Data File Section
+    // MARK: - Form Data File Section
 
     var formDataFilesSection: some View {
         Group {

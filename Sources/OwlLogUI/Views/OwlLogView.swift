@@ -20,7 +20,7 @@ public struct OwlLogView: View {
     }
 
     public var body: some View {
-        if #available(iOS 16.0, *) {
+        if #available(iOS 16.0, macOS 13.0, *) {
             NavigationStack {
                 bodyView
             }
@@ -28,7 +28,7 @@ public struct OwlLogView: View {
                 NavigationStack {
                     OwlStatsView(service: service)
                         .toolbar {
-                            ToolbarItem(placement: .topBarTrailing) {
+                            ToolbarItem(placement: .owlTrailing) {
                                 Button("Done") { showStats = false }
                             }
                         }
@@ -41,15 +41,33 @@ public struct OwlLogView: View {
             .sheet(isPresented: $showStats) {
                 NavigationView {
                     OwlStatsView(service: service)
-                        .navigationBarItems(trailing: Button("Done") { showStats = false })
+                        .toolbar {
+                            ToolbarItem(placement: .automatic) {
+                                Button("Done") { showStats = false }
+                            }
+                        }
                 }
             }
         }
     }
 }
 
+// MARK: - Variables 
+
 private extension OwlLogView {
-    // MARK: Body view
+    
+    // MARK: - Filtered Calls
+
+    var filteredCalls: [OwlHTTPCall] {
+        service.filteredCalls(query)
+    }
+}
+
+// MARK: - View Builders
+
+private extension OwlLogView {
+    
+    // MARK: - Body view
 
     var bodyView: some View {
         List {
@@ -62,15 +80,15 @@ private extension OwlLogView {
             }
         }
         .navigationTitle(isSearching ? "" : "Owl Log")
-        .searchable(text: $query, placement: .navigationBarDrawer(displayMode: .always))
+        .searchable(text: $query, placement: .owlAutomatic)
         .toolbar {
-            ToolbarItem(placement: .topBarLeading) {
+            ToolbarItem(placement: .owlLeading) {
                 Button("Done") {
                     service.closeInspector()
                 }
             }
 
-            ToolbarItemGroup(placement: .topBarTrailing) {
+            ToolbarItemGroup(placement: .owlTrailing) {
                 Button {
                     isSearching.toggle()
                 } label: {
@@ -96,13 +114,7 @@ private extension OwlLogView {
         }
     }
 
-    // MARK: Filter Section
-
-    var filteredCalls: [OwlHTTPCall] {
-        service.filteredCalls(query)
-    }
-
-    // MARK: Call Row Sections
+    // MARK: - Call Row
 
     func callRow(_ call: OwlHTTPCall) -> some View {
         NavigationLink {
@@ -141,7 +153,7 @@ private extension OwlLogView {
         .disabled(call.response?.status == nil)
     }
 
-    // MARK: Status View
+    // MARK: - Status View
 
     @ViewBuilder
     func statusView(for call: OwlHTTPCall) -> some View {
@@ -156,7 +168,7 @@ private extension OwlLogView {
         }
     }
 
-    // MARK: Empty State View
+    // MARK: - Empty State View
 
     var emptyStateView: some View {
         VStack(spacing: 16) {

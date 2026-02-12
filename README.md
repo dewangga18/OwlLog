@@ -16,7 +16,7 @@ Add the following to your `Package.swift` file:
 
 ```swift
 dependencies: [
-    .package(url: "https://github.com/dewangga18/OwlLog.git", from: "1.0.0")
+    .package(url: "https://github.com/dewangga18/OwlLog.git", from: "1.0.1")
 ]
 ```
 
@@ -42,9 +42,9 @@ import OwlLog
 func createURLSession() -> URLSession {
     let config = URLSessionConfiguration.default
     
-    // Best Practice: Only register the interceptor in Staging or Development
-    if AppEnvironment.current == .staging || AppEnvironment.current == .development {
-        config.protocolClasses = [OwlURLProtocol.self] + (config.protocolClasses ?? [])
+    // Best Practice: Only register the interceptor in non-production environment
+    if AppEnvironment.current != .production {
+        OwlURLProtocol.setup(in: config, isConsoleLogEnabled: true) // Enable console logging
     }
     
     return URLSession(configuration: config)
@@ -70,9 +70,12 @@ struct MyApp: App {
     var body: some Scene {
         WindowGroup {
             ContentView()
+                // Inject overlay here
                 .overlay {
-                    // Inject overlay here
-                    OwlOverlay()
+                    // Best Practice: Only show in non-production environment
+                    if AppEnvironment.current != .production {
+                        OwlOverlay()
+                    }
                 }
         }
     }
@@ -90,46 +93,6 @@ OwlOverlay(
 ```
 
 ---
-
-## 💡 Best Practice: Staging vs Production
-
-It is highly recommended to exclude the network logger from **Production** builds for security and performance reasons. Instead of just using `#if DEBUG`, the best practice is to check your application's environment.
-
-### 1. Environment-Based UI Visibility
-If you have an environment enum in your app, use it to conditionally show the `OwlOverlay`.
-
-```swift
-@main
-struct MyApp: App {
-    var body: some Scene {
-        WindowGroup {
-            ContentView()
-                .overlay {
-                    // Only show in staging or development environments
-                    if AppEnvironment.current == .staging || AppEnvironment.current == .development {
-                        OwlOverlay()
-                    }
-                }
-        }
-    }
-}
-```
-
-### 2. Conditional Interceptor Registration
-Similarly, you should only register the interceptor when running in a non-production environment.
-
-```swift
-func createSession() -> URLSession {
-    let config = URLSessionConfiguration.default
-    
-    // Only intercept calls if the environment is NOT production
-    if AppEnvironment.current != .production {
-        config.protocolClasses = [OwlURLProtocol.self] + (config.protocolClasses ?? [])
-    }
-    
-    return URLSession(configuration: config)
-}
-```
 
 ## 🔒 Security & Concurrency
 OwlLog is built with the latest Swift standards:

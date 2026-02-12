@@ -22,6 +22,9 @@ public struct OwlStatsView: View {
 }
 
 private extension OwlStatsView {
+
+    // MARK: - Content
+
     @ViewBuilder
     private var content: some View {
         let calls = service.calls
@@ -52,6 +55,8 @@ private extension OwlStatsView {
         }
     }
 
+    // MARK: - Overview Section
+
     private func overviewSection(_ stats: OwlStats) -> some View {
         VStack(alignment: .leading, spacing: 12) {
             Text("Overview")
@@ -65,6 +70,8 @@ private extension OwlStatsView {
             }
         }
     }
+
+    // MARK: - Stat Card
 
     private func statCard(_ title: String, _ value: String) -> some View {
         VStack {
@@ -81,10 +88,9 @@ private extension OwlStatsView {
         .cornerRadius(10)
     }
 
-    private func distributionSection(
-        title: String,
-        data: [String: Int]
-    ) -> some View {
+    // MARK: - Distribution Section
+
+    private func distributionSection(title: String, data: [String: Int]) -> some View {
         VStack(alignment: .leading, spacing: 8) {
             Text(title)
                 .font(.headline)
@@ -108,6 +114,8 @@ private extension OwlStatsView {
             }
         }
     }
+
+    // MARK: - Slowest Section
 
     private func slowestSection(_ stats: OwlStats) -> some View {
         VStack(alignment: .leading, spacing: 8) {
@@ -137,6 +145,8 @@ private extension OwlStatsView {
             }
         }
     }
+
+    // MARK: - Empty State View
 
     private var emptyStateView: some View {
         VStack(spacing: 16) {
