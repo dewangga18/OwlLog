@@ -160,7 +160,6 @@ private extension OwlLogView {
             .padding(.vertical, 6)
         }
         .buttonStyle(.plain)
-        .disabled(call.response?.status == nil)
     }
 
     // MARK: - Status View
