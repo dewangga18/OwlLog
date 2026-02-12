@@ -35,7 +35,8 @@ dependencies: [
 .target(
     name: "MyAppTarget",
     dependencies: [
-        .product(name: "OwlLogUI", package: "OwlLog") // Use "OwlLog" if you don't need the UI
+        // Use "OwlLog", if you don't need the UI
+        .product(name: "OwlLogUI", package: "OwlLog")
     ]
 )
 ```
@@ -59,15 +60,14 @@ You should only add `OwlURLProtocol` to your `URLSessionConfiguration` if the en
 
 ```swift
 import OwlLog
-// or your can import OwlLogUI if you want to use the UI
-// import OwlLogUI
 
 func createURLSession() -> URLSession {
     let config = URLSessionConfiguration.default
     
     // Best Practice: Only register the interceptor in non-production environment
     if AppEnvironment.current != .production {
-        OwlURLProtocol.setup(in: config, isConsoleLogEnabled: true) // Enable console logging
+        // Enable console logging, default is true
+        OwlURLProtocol.setup(in: config, isConsoleLogEnabled: true) 
     }
     
     return URLSession(configuration: config)
@@ -107,7 +107,6 @@ struct MyApp: App {
 
 ---
 
-### 🖌 Customization
 You can customize the appearance of the floating button by passing parameters to the initializer:
 
 ```swift
@@ -126,4 +125,4 @@ OwlLog is built with the latest Swift standards:
 - **MainActor**: All UI updates are safely dispatched to the main thread.
 
 ---
-Made with ❤️ for better debugging.
+Crafted with ☕ and ❤️ for smoother debugging.
