@@ -5,7 +5,11 @@ All notable changes to the OwlLog project will be documented in this file.
 ## [1.0.4] - 2026-02-12
 
 ### Added
-- Update HTTP status code to be more readable.
+- **Detailed Error Reporting**: Now captures and displays stack traces and specific error codes for failed requests.
+- **Network Error Classification**: Automatically categorizes errors (e.g., Offline, Timeout, DNS Failure) for easier diagnosis.
+- **Console Logging**: Enhanced logging output with clear error reasons and status indicators.
+- **UI Improvements**: Better text selection in error views and visual indication of error codes in the log list.
+- **Status Handling**: Improved handling of missing status codes and readable HTTP status display.
 
 ## [1.0.3] - 2026-02-12
 

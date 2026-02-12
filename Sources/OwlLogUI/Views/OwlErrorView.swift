@@ -16,18 +16,66 @@ public struct OwlErrorView: View {
     }
 
     public var body: some View {
-        Group {
-            if let error = call.error {
-                ScrollView {
-                    Text(String(describing: error.error))
-                        .font(.system(size: 13, design: .monospaced))
-                        .textSelection(.enabled)
-                        .frame(maxWidth: .infinity, alignment: .leading)
-                        .padding(16)
+        if let errorModel = call.error {
+            ScrollView {
+                VStack(alignment: .leading, spacing: 20) {
+                    VStack(alignment: .leading, spacing: 4) {
+                        Text("Error")
+                            .font(.caption)
+                            .foregroundStyle(.secondary)
+
+                        Text(errorModel.displayTitle)
+                            .font(.title3)
+                            .fontWeight(.semibold)
+                            .foregroundColor(.orange)
+                    }
+
+                    Divider()
+
+                    if let code = errorModel.resolvedCode {
+                        VStack(alignment: .leading, spacing: 4) {
+                            Text("Code")
+                                .font(.caption)
+                                .foregroundStyle(.secondary)
+
+                            Text("\(code)")
+                                .font(.system(.body, design: .monospaced))
+                        }
+
+                        Divider()
+                    }
+
+                    VStack(alignment: .leading, spacing: 4) {
+                        Text("Description")
+                            .font(.caption)
+                            .foregroundStyle(.secondary)
+
+                        Text(errorModel.description)
+                            .font(.system(.body, design: .monospaced))
+                            .textSelection(.enabled)
+                    }
+
+                    if let stack = errorModel.stackTrace,
+                       !stack.isEmpty
+                    {
+                        Divider()
+
+                        VStack(alignment: .leading, spacing: 4) {
+                            Text("Stacktrace")
+                                .font(.caption)
+                                .foregroundStyle(.secondary)
+
+                            Text(stack)
+                                .font(.system(size: 12, design: .monospaced))
+                                .textSelection(.enabled)
+                        }
+                    }
                 }
-            } else {
-                EmptyView()
+                .frame(maxWidth: .infinity, alignment: .leading)
+                .padding(16)
             }
+        } else {
+            EmptyView()
         }
     }
 }

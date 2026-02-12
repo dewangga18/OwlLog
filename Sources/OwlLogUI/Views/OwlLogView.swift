@@ -171,6 +171,10 @@ private extension OwlLogView {
             Text("\(status)")
                 .fontWeight(.semibold)
                 .foregroundColor(statusColor(statusCode(call: call)))
+        } else if let code = call.error?.resolvedCode {
+            Text("\(code)")
+                .fontWeight(.semibold)
+                .foregroundColor(.red)
         } else {
             ProgressView()
                 .scaleEffect(0.7)

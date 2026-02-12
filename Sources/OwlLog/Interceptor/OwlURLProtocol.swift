@@ -9,7 +9,7 @@ import Foundation
 
 public final class OwlURLProtocol: URLProtocol {
     private var dataTask: URLSessionDataTask?
-    
+
     public static var isConsoleLogEnabled: Bool = true
 
     public static func setup(
@@ -70,7 +70,7 @@ public final class OwlURLProtocol: URLProtocol {
 
         Task { @MainActor in
             OwlService.shared.addCall(call)
-            
+
             if OwlURLProtocol.isConsoleLogEnabled {
                 print("[OwlLog] 🚀 \(call.method) \(call.uri)")
             }
@@ -98,18 +98,23 @@ public final class OwlURLProtocol: URLProtocol {
                         requestId: id,
                         duration: duration
                     )
-                    
+
                     if OwlURLProtocol.isConsoleLogEnabled {
-                        let statusIcon = (200...299).contains(httpResponse.statusCode) ? "✅" : "⚠️"
+                        let statusIcon = (200 ... 299).contains(httpResponse.statusCode) ? "✅" : "⚠️"
                         print("[OwlLog] \(statusIcon) \(httpResponse.statusCode) (\(duration)ms) \(newRequest.httpMethod ?? "") \(newRequest.url?.absoluteString ?? "")")
                     }
                 }
             }
 
             if let error = error {
-                let errorModel = OwlHTTPError(
-                    error: error
+                let stackTrace = Thread.callStackSymbols.joined(separator: "\n")
+                var errorModel = OwlHTTPError(
+                    error: error,
                 )
+
+                if let error = error as? URLError {
+                    errorModel = errorModel.copy(stackTrace: stackTrace, code: error.errorCode)
+                }
 
                 Task { @MainActor in
                     OwlService.shared.addError(
@@ -117,7 +122,7 @@ public final class OwlURLProtocol: URLProtocol {
                         requestId: id,
                         duration: duration
                     )
-                    
+
                     if OwlURLProtocol.isConsoleLogEnabled {
                         print("[OwlLog] ❌ ERROR (\(duration)ms) \(newRequest.httpMethod ?? "") \(newRequest.url?.absoluteString ?? "")")
                         print("        Reason: \(error.localizedDescription)")
