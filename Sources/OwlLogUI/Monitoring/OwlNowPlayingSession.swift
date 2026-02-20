@@ -18,6 +18,7 @@ public final class OwlNowPlayingSession {
         guard !isActive else { return }
         isActive = true
 
+        UIApplication.shared.beginReceivingRemoteControlEvents()
         configureAudioSession()
         publishNowPlayingInfo()
         configureRemoteCommands()
@@ -30,12 +31,13 @@ public final class OwlNowPlayingSession {
         removeRemoteCommands()
         MPNowPlayingInfoCenter.default().nowPlayingInfo = nil
         MPNowPlayingInfoCenter.default().playbackState = .stopped
+        UIApplication.shared.endReceivingRemoteControlEvents()
 
         do {
             try AVAudioSession.sharedInstance().setActive(false, options: [])
         } catch {
             #if DEBUG
-            print()
+            print("⚠️ OwlNowPlayingSession: AVAudioSession deactivation failed – \(error.localizedDescription)")
             #endif
         }
     }
@@ -47,7 +49,7 @@ public final class OwlNowPlayingSession {
             try session.setActive(true, options: [])
         } catch {
             #if DEBUG
-            print()
+            print("⚠️ OwlNowPlayingSession: AVAudioSession activation failed – \(error.localizedDescription)")
             #endif
         }
     }
@@ -57,6 +59,7 @@ public final class OwlNowPlayingSession {
         info[MPMediaItemPropertyTitle] = "OwlLog"
         info[MPMediaItemPropertyArtist] = "Debug Inspector"
         info[MPNowPlayingInfoPropertyIsLiveStream] = true
+        info[MPNowPlayingInfoPropertyElapsedPlaybackTime] = 0
         info[MPNowPlayingInfoPropertyPlaybackRate] = 1.0
 
         MPNowPlayingInfoCenter.default().nowPlayingInfo = info

@@ -41,14 +41,6 @@ public final class OwlNotificationLifecycleDelegate: NSObject, UIApplicationDele
         }
     }
 
-    public func userNotificationCenter(
-        _ center: UNUserNotificationCenter,
-        willPresent notification: UNNotification,
-        withCompletionHandler completionHandler: @escaping (UNNotificationPresentationOptions) -> Void
-    ) {
-        completionHandler([.banner, .list, .sound])
-    }
-
     public func fetchNotificationSettings() async -> OwlNotificationSettings {
         await withCheckedContinuation { continuation in
             UNUserNotificationCenter.current().getNotificationSettings { settings in

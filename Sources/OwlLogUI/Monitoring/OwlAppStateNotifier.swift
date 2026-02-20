@@ -1,27 +1,18 @@
 #if canImport(UIKit)
+import Combine
 import Foundation
+import OwlLog
 import UIKit
 import UserNotifications
 
 @MainActor
 public final class OwlAppStateNotifier {
-    public enum AppActivityState: String, Sendable {
-        case foreground
-        case background
-
-        var description: String {
-            switch self {
-            case .foreground: return "foreground"
-            case .background: return "background"
-            }
-        }
-    }
-
     public static let shared = OwlAppStateNotifier()
 
     private let notificationCenter: UNUserNotificationCenter
-    private var observers: [NSObjectProtocol] = []
-    private var lastState: AppActivityState?
+    private var cancellables: Set<AnyCancellable> = []
+    private var lastCallsCount: Int = 0
+    private var lastNotificationAt: Date?
     private var isMonitoring = false
     private let notificationIdentifier = "OwlLogUI.AppState"
 
@@ -33,78 +24,72 @@ public final class OwlAppStateNotifier {
         guard !isMonitoring else { return }
         isMonitoring = true
         requestAuthorization()
-        registerObservers()
-        publishCurrentState()
+        startLogObserver()
     }
 
     public func stopMonitoring() {
         guard isMonitoring else { return }
         isMonitoring = false
-        removeObservers()
+        cancellables.removeAll()
     }
 
-    private func registerObservers() {
-        let center = NotificationCenter.default
-        let mapping: [(NSNotification.Name, AppActivityState)] = [
-            (UIApplication.didBecomeActiveNotification, .foreground),
-            (UIApplication.willResignActiveNotification, .background),
-            (UIApplication.didEnterBackgroundNotification, .background)
-        ]
+    private func startLogObserver() {
+        let service = OwlService.shared
+        lastCallsCount = service.calls.count
 
-        for (name, state) in mapping {
-            let observer = center.addObserver(forName: name, object: nil, queue: .main) { [weak self] _ in
-                Task { @MainActor [weak self] in
-                    self?.handle(state: state)
-                }
+        service.$calls
+            .receive(on: DispatchQueue.main)
+            .sink { [weak self] calls in
+                guard let self else { return }
+                self.handleCallsUpdated(calls)
             }
-            observers.append(observer)
+            .store(in: &cancellables)
+    }
+
+    private func handleCallsUpdated(_ calls: [OwlHTTPCall]) {
+        let newCount = calls.count
+
+        guard newCount > lastCallsCount else {
+            lastCallsCount = newCount
+            return
         }
-    }
 
-    private func removeObservers() {
-        let center = NotificationCenter.default
-        observers.forEach(center.removeObserver)
-        observers.removeAll()
-    }
+        lastCallsCount = newCount
 
-    private func publishCurrentState() {
-        guard let current = currentActivityState() else { return }
-        handle(state: current)
-    }
+        // Only notify when the app isn't active; avoid foreground spam.
+        guard UIApplication.shared.applicationState != .active else { return }
 
-    private func currentActivityState() -> AppActivityState? {
-        switch UIApplication.shared.applicationState {
-        case .active:
-            return .foreground
-        case .inactive, .background:
-            return .background
-        @unknown default:
-            return .foreground
+        // Throttle updates; we still replace the delivered notification.
+        let now = Date()
+        if let last = lastNotificationAt, now.timeIntervalSince(last) < 1.0 {
+            return
         }
-    }
+        lastNotificationAt = now
 
-    private func handle(state: AppActivityState) {
-        guard state != lastState else { return }
-        lastState = state
-        pushNotification(for: state)
+        pushNotification(calls: calls)
     }
 
     private func requestAuthorization() {
-        let options: UNAuthorizationOptions = [.alert, .badge, .sound]
-
+        let options: UNAuthorizationOptions = [.alert, .badge]
         notificationCenter.requestAuthorization(options: options) { _, _ in }
     }
 
-    private func pushNotification(for state: AppActivityState) {
+    private func pushNotification(calls: [OwlHTTPCall]) {
         let content = UNMutableNotificationContent()
         content.title = "OwlLog Activity"
-        content.subtitle = "App moved to the \(state.description)"
-        content.body = "Tap to open the inspector and examine the latest network traffic."
-        content.interruptionLevel = .timeSensitive
+        if let latest = calls.last {
+            content.subtitle = "\(latest.method) \(latest.endpoint)"
+        } else {
+            content.subtitle = "New network activity"
+        }
+        content.body = "Logged calls: \(calls.count). Tap to open the inspector."
+        if #available(iOS 15.0, *) {
+            content.interruptionLevel = .passive
+        }
         content.sound = nil
         content.threadIdentifier = notificationIdentifier
         content.categoryIdentifier = notificationIdentifier
-        content.userInfo = ["owlAppState": state.rawValue]
+        content.userInfo = ["owlEvent": "new_call", "owlCallsCount": calls.count]
 
         notificationCenter.removeDeliveredNotifications(withIdentifiers: [notificationIdentifier])
         let request = UNNotificationRequest(identifier: notificationIdentifier, content: content, trigger: nil)

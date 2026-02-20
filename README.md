@@ -127,10 +127,11 @@ OwlOverlay(isVisible: false)
 
 ## 🖥 UI Integration (Notifications)
 
-OwlLog also supports local notification banners that can reopen the inspector UI when tapped.
+OwlLog can push a local notification when new network logs are added (the notification is replaced/updated so it doesn't spam).
 
 This feature is powered by `OwlNotificationLifecycleDelegate` and `OwlAppStateNotifier`. <br>
-When the user taps the activity banner, the full-screen log inspector opens. <br> 
+When the user taps the notification, the full-screen log inspector opens. <br>
+The SDK suppresses foreground presentation (no banner while the app is active). <br>
 
 ### 1. Install the Lifecycle Delegate
 
@@ -157,7 +158,7 @@ struct MyApp: App {
 
 The delegate automatically:
 - Requests notification permission
-- Starts app state monitoring
+- Starts log monitoring
 - Reopens the inspector when a notification is tapped
 
 If you want to check the notification status before monitoring begins, you can preflight it:
