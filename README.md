@@ -119,6 +119,119 @@ OwlOverlay(
 
 ---
 
+## 🖥 UI Integration (Notifications)
+
+OwlLog also supports local notification banners that can reopen the inspector UI when tapped.
+
+This feature is powered by `OwlAppLifecycleDelegate` and `OwlAppStateNotifier`. <br>
+When the user taps the activity banner, the full-screen log inspector opens. <br> 
+
+### 1. Install the Lifecycle Delegate
+
+Add the delegate from `OwlLogUI` and wire it into your SwiftUI `App`:
+
+```swift
+@main
+struct MyApp: App {
+    @UIApplicationDelegateAdaptor(OwlAppLifecycleDelegate.self)
+    private var lifecycle
+
+    var body: some Scene {
+        WindowGroup {
+            ContentView()
+        }
+    }
+}
+```
+
+The delegate automatically:
+- Requests notification permission
+- Starts app state monitoring
+- Reopens the inspector when a notification is tapped
+
+If you want to check the notification status before monitoring begins, you can preflight it:
+
+```swift
+Task {
+    let settings = await lifecycle.fetchNotificationSettings()
+
+    switch settings.authorizationStatus {
+    case .notDetermined:
+        // Optionally show your own explanation before the system prompt appears.
+        break
+    case .denied:
+        // Guide the user to Settings or explain why notifications are required.
+        break
+    default:
+        break
+    }
+}
+```
+
+You can integrate this into your own flow — show a rationale card, wait for a user action, or let `OwlAppStateNotifier` trigger the system prompt automatically.
+
+---
+
+### 2. Customize the Inspector (Optional)
+
+If you need to pass additional context (such as filters or feature flags), read the `userInfo` from:
+
+```swift
+response.notification.request.content.userInfo
+```
+
+inside your own `UNUserNotificationCenterDelegate`, then call:
+
+```swift
+OwlService.shared.openInspector()
+```
+
+---
+
+### 3. Prevent Activation in Production
+
+As with the overlay, always guard this setup to ensure OwlLog does not run in production builds.
+
+---
+
+## 🖥 UI Integration (Now Playing)
+
+If you want a "Now Playing" style card (Control Center / lock screen) while the app is active, OwlLogUI also provides a lightweight MediaPlayer integration.
+
+Notes:
+- iOS does not provide a callback for tapping the Now Playing card itself.
+- To mimic "tap to open", OwlLogUI maps remote buttons (Play/Pause/Toggle) to `OwlService.shared.openInspector()`.
+- This session is started only while the app is active (foreground).
+
+### 1. Install the Now Playing Lifecycle Delegate
+
+```swift
+@main
+struct MyApp: App {
+    @UIApplicationDelegateAdaptor(OwlNowPlayingLifecycleDelegate.self)
+    private var nowPlayingLifecycle
+
+    var body: some Scene {
+        WindowGroup {
+            ContentView()
+        }
+    }
+}
+```
+
+### 2. Customize (Optional)
+
+If you prefer manual control, call:
+
+```swift
+Task { @MainActor in
+    OwlNowPlayingSession.shared.start()
+    // ...
+    OwlNowPlayingSession.shared.stop()
+}
+```
+
+
 OwlLog is built with the latest Swift standards:
 - **Actors**: Uses the `OwlLogger` actor to prevent data races.
 - **Sendable**: All data models conform to the `Sendable` protocol, ensuring safety in Swift 6 Strict Concurrency environments.
