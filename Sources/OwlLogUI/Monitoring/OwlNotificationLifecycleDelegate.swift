@@ -10,7 +10,7 @@ public struct OwlNotificationSettings: Sendable {
     public let badgeSetting: UNNotificationSetting
 }
 
-public final class OwlAppLifecycleDelegate: NSObject, UIApplicationDelegate, UNUserNotificationCenterDelegate {
+public final class OwlNotificationLifecycleDelegate: NSObject, UIApplicationDelegate, UNUserNotificationCenterDelegate {
     override public init() {
         super.init()
     }

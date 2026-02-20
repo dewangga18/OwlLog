@@ -123,7 +123,7 @@ OwlOverlay(
 
 OwlLog also supports local notification banners that can reopen the inspector UI when tapped.
 
-This feature is powered by `OwlAppLifecycleDelegate` and `OwlAppStateNotifier`. <br>
+This feature is powered by `OwlNotificationLifecycleDelegate` and `OwlAppStateNotifier`. <br>
 When the user taps the activity banner, the full-screen log inspector opens. <br> 
 
 ### 1. Install the Lifecycle Delegate
@@ -133,7 +133,7 @@ Add the delegate from `OwlLogUI` and wire it into your SwiftUI `App`:
 ```swift
 @main
 struct MyApp: App {
-    @UIApplicationDelegateAdaptor(OwlAppLifecycleDelegate.self)
+    @UIApplicationDelegateAdaptor(OwlNotificationLifecycleDelegate.self)
     private var lifecycle
 
     var body: some Scene {
