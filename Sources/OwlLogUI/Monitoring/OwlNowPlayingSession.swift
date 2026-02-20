@@ -68,7 +68,7 @@ public final class OwlNowPlayingSession {
 
         commands.playCommand.isEnabled = true
         commands.pauseCommand.isEnabled = true
-        commands.togglePlayPauseCommand.isEnabled = false
+        commands.togglePlayPauseCommand.isEnabled = true
         commands.nextTrackCommand.isEnabled = false
         commands.previousTrackCommand.isEnabled = false
 
@@ -79,6 +79,11 @@ public final class OwlNowPlayingSession {
 
         commandTargets.append(commands.pauseCommand.addTarget { [weak self] _ in
             Task { @MainActor in self?.service.closeInspector() }
+            return .success
+        })
+
+        commandTargets.append(commands.togglePlayPauseCommand.addTarget { [weak self] _ in
+            Task { @MainActor in self?.service.openInspector() }
             return .success
         })
     }
@@ -94,6 +99,7 @@ public final class OwlNowPlayingSession {
 
         commands.playCommand.isEnabled = false
         commands.pauseCommand.isEnabled = false
+        commands.togglePlayPauseCommand = false
     }
 }
 

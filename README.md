@@ -117,6 +117,12 @@ OwlOverlay(
 )
 ```
 
+You can also hide the floating button while keeping the inspector sheet modifier active (useful when you want to open the inspector from Notifications / Now Playing):
+
+```swift
+OwlOverlay(isActive: false)
+```
+
 ---
 
 ## 🖥 UI Integration (Notifications)
@@ -139,6 +145,11 @@ struct MyApp: App {
     var body: some Scene {
         WindowGroup {
             ContentView()
+                .overlay {
+                    if AppEnvironment.current != .production {
+                        OwlOverlay(isActive: false)
+                    }
+                }
         }
     }
 }
@@ -200,7 +211,7 @@ If you want a "Now Playing" style card (Control Center / lock screen) while the 
 
 Notes:
 - iOS does not provide a callback for tapping the Now Playing card itself.
-- To mimic "tap to open", OwlLogUI maps remote buttons (Play/Pause/Toggle) to `OwlService.shared.openInspector()`.
+- To mimic "tap to open", OwlLogUI maps remote buttons (Play/Toggle) to `OwlService.shared.openInspector()` (Pause closes the inspector).
 - This session is started only while the app is active (foreground).
 
 ### 1. Install the Now Playing Lifecycle Delegate
@@ -214,6 +225,11 @@ struct MyApp: App {
     var body: some Scene {
         WindowGroup {
             ContentView()
+                .overlay {
+                    if AppEnvironment.current != .production {
+                        OwlOverlay(isActive: false)
+                    }
+                }
         }
     }
 }

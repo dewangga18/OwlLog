@@ -29,6 +29,12 @@ public final class OwlNowPlayingLifecycleDelegate: NSObject, UIApplicationDelega
             OwlNowPlayingSession.shared.stop()
         }
     }
+
+    public func applicationDidEnterBackground(_ application: UIApplication) {
+        Task { @MainActor in
+            OwlNowPlayingSession.shared.stop()
+        }
+    }
 }
 
 #endif

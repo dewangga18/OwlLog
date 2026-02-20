@@ -18,52 +18,57 @@ public struct OwlOverlay: View {
 
     private let backgroundColor: Color
     private let icon: Image
+    private let isActive: Bool
 
     public init(
+        isActive: Bool = true,
         backgroundColor: Color = .yellow,
         icon: Image = Image(systemName: "ladybug.fill")
     ) {
+        self.isActive = isActive
         self.backgroundColor = backgroundColor
         self.icon = icon
     }
 
     public var body: some View {
         #if os(iOS)
-        GeometryReader { geo in
-            if !service.isInspectorOpened {
-                Circle()
-                    .fill(backgroundColor)
-                    .frame(width: buttonSize, height: buttonSize)
-                    .overlay(
-                        icon
-                            .resizable()
-                            .scaledToFit()
-                            .padding(8)
-                            .foregroundColor(.black)
-                    )
-                    .position(
-                        x: position.x + dragOffset.width,
-                        y: position.y + dragOffset.height
-                    )
-                    .gesture(
-                        DragGesture()
-                            .updating($dragOffset) { value, state, _ in
-                                state = value.translation
-                            }
-                            .onEnded { value in
-                                updatePosition(
-                                    with: value.translation,
-                                    in: geo
-                                )
-                            }
-                    )
-                    .onTapGesture {
-                        service.openInspector()
-                    }
-                    .onAppear {
-                        snapToSide(in: geo)
-                    }
-                    .animation(.easeInOut(duration: 0.1), value: position)
+        ZStack {
+            if isActive && !service.isInspectorOpened {
+                GeometryReader { geo in
+                    Circle()
+                        .fill(backgroundColor)
+                        .frame(width: buttonSize, height: buttonSize)
+                        .overlay(
+                            icon
+                                .resizable()
+                                .scaledToFit()
+                                .padding(8)
+                                .foregroundColor(.black)
+                        )
+                        .position(
+                            x: position.x + dragOffset.width,
+                            y: position.y + dragOffset.height
+                        )
+                        .gesture(
+                            DragGesture()
+                                .updating($dragOffset) { value, state, _ in
+                                    state = value.translation
+                                }
+                                .onEnded { value in
+                                    updatePosition(
+                                        with: value.translation,
+                                        in: geo
+                                    )
+                                }
+                        )
+                        .onTapGesture {
+                            service.openInspector()
+                        }
+                        .onAppear {
+                            snapToSide(in: geo)
+                        }
+                        .animation(.easeInOut(duration: 0.1), value: position)
+                }
             }
         }
         .fullScreenCover(isPresented: $service.isInspectorOpened) {
