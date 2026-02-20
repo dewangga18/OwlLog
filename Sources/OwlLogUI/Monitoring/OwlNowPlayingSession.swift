@@ -99,7 +99,7 @@ public final class OwlNowPlayingSession {
 
         commands.playCommand.isEnabled = false
         commands.pauseCommand.isEnabled = false
-        commands.togglePlayPauseCommand = false
+        commands.togglePlayPauseCommand.isEnabled = false
     }
 }
 

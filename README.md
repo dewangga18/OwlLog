@@ -120,7 +120,7 @@ OwlOverlay(
 You can also hide the floating button while keeping the inspector sheet modifier active (useful when you want to open the inspector from Notifications / Now Playing):
 
 ```swift
-OwlOverlay(isActive: false)
+OwlOverlay(isVisible: false)
 ```
 
 ---
@@ -147,7 +147,7 @@ struct MyApp: App {
             ContentView()
                 .overlay {
                     if AppEnvironment.current != .production {
-                        OwlOverlay(isActive: false)
+                        OwlOverlay(isVisible: false)
                     }
                 }
         }
@@ -227,7 +227,7 @@ struct MyApp: App {
             ContentView()
                 .overlay {
                     if AppEnvironment.current != .production {
-                        OwlOverlay(isActive: false)
+                        OwlOverlay(isVisible: false)
                     }
                 }
         }

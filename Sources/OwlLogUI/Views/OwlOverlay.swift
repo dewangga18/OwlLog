@@ -18,14 +18,14 @@ public struct OwlOverlay: View {
 
     private let backgroundColor: Color
     private let icon: Image
-    private let isActive: Bool
+    private let isVisible: Bool
 
     public init(
-        isActive: Bool = true,
+        isVisible: Bool = true,
         backgroundColor: Color = .yellow,
         icon: Image = Image(systemName: "ladybug.fill")
     ) {
-        self.isActive = isActive
+        self.isVisible = isVisible
         self.backgroundColor = backgroundColor
         self.icon = icon
     }
@@ -33,7 +33,7 @@ public struct OwlOverlay: View {
     public var body: some View {
         #if os(iOS)
         ZStack {
-            if isActive && !service.isInspectorOpened {
+            if isVisible && !service.isInspectorOpened {
                 GeometryReader { geo in
                     Circle()
                         .fill(backgroundColor)
