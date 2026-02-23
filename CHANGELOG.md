@@ -5,9 +5,6 @@ All notable changes to the OwlLog project will be documented in this file.
 ## [1.0.5] - 2026-02-20
 
 ### Added
-- **Activity notifications** — Introduced `OwlAppStateNotifier` to observe new network logs and emit a single, replaced activity notification that can reopen the inspector when tapped.
-- **Lifecycle delegate integration** — Added `OwlNotificationLifecycleDelegate` so SwiftUI hosts can attach `@UIApplicationDelegateAdaptor` and automatically configure notification delegation and state observation.
-- **Notification settings helper** — Exposed `fetchNotificationSettings()` as an async, Sendable-safe snapshot to allow clients to present custom rationale screens before requesting permissions.
 - **Control Center integration** — Added `OwlNowPlayingSession` and `OwlNowPlayingLifecycleDelegate` to display a Now Playing card while the app is active, mapping remote commands to reopening the inspector.
 - **SwiftUI lifecycle guidance** — Documented recommended integration patterns in `README.md` for foreground/background handling.
 - **Hidden overlay mode** — Added `OwlOverlay(isActive:)` so you can hide the floating button while keeping the inspector sheet modifier active.
