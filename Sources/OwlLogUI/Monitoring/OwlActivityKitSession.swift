@@ -79,7 +79,7 @@ public struct OwlLiveActivityAttributes: ActivityAttributes, Sendable {
 
 @available(iOS 16.1, *)
 public enum OwlLiveActivityCleanup {
-    static func dismissExisting() {
+    public static func dismissExisting() {
         Task { @MainActor in
             for activity in Activity<OwlLiveActivityAttributes>.activities {
                 await activity.end(dismissalPolicy: .immediate)
