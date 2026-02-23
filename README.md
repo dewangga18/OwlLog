@@ -134,6 +134,10 @@ Notes:
 struct MyApp: App {
 @UIApplicationDelegateAdaptor(OwlActivityKitLifecycleDelegate.self)
     private var delegate
+    
+    init() {
+        OwlLiveActivityCleanup.dismissExisting()
+    }
 
     var body: some Scene {
         WindowGroup {

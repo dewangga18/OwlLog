@@ -76,6 +76,17 @@ public struct OwlLiveActivityAttributes: ActivityAttributes, Sendable {
     public init() {}
 }
 
+
+@available(iOS 16.1, *)
+enum OwlLiveActivityCleanup {
+    static func dismissExisting() {
+        Task { @MainActor in
+            for activity in Activity<OwlLiveActivityAttributes>.activities {
+                await activity.end(dismissalPolicy: .immediate)
+            }
+        }
+    }
+}
 #else
 
 // Fallback for iOS <16.1: no-op implementation to keep API surface stable.
