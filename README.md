@@ -125,7 +125,7 @@ OwlOverlay(isVisible: false)
 
 ---
 
-## 🖥 UI Integration (Live Activiy)
+## 🖥 UI Integration (Live Activity)
 
 > Live Activities require iOS 16.1+. On earlier versions the APIs no-op safely.
 
@@ -133,6 +133,7 @@ Notes:
 - Live Activities appear on Lock Screen / Dynamic Island (not in Notification Center).
 - Tapping the Live Activity opens your app; OwlLogUI also maps remote commands (Play/Toggle) to `OwlService.shared.openInspector()` (Pause closes the inspector) on supported devices.
 - The session is started via the provided lifecycle delegate; data is updated automatically when network logs change.
+- To render the Live Activity, your host app must include a WidgetKit target with an `ActivityConfiguration` for `OwlLiveActivityAttributes` and enable **Supports Live Activities** on the app target. Swift packages cannot add this automatically—add the widget target to your app project.
 
 ### 1. Install the Owl Delegate
 
@@ -167,6 +168,63 @@ Task { @MainActor in
 }
 ```
 
+### 3. Add the WidgetKit target (required for UI)
+
+Create a Widget Extension in your app, then add:
+
+```swift
+import WidgetKit
+import ActivityKit
+import SwiftUI
+import OwlLogUI
+
+struct OwlLogActivityWidget: Widget {
+    var body: some WidgetConfiguration {
+        ActivityConfiguration(for: OwlLiveActivityAttributes.self) { context in
+            // Lock Screen view
+            VStack(alignment: .leading, spacing: 4) {
+                Text("OwlLog")
+                    .font(.headline)
+                Text(context.state.subtitle)
+                    .font(.subheadline)
+                Text("Calls: \(context.state.callsCount)")
+                    .font(.caption)
+                    .foregroundStyle(.secondary)
+            }
+            .padding()
+        } dynamicIsland: { context in
+            DynamicIsland {
+                DynamicIslandExpandedRegion(.center) {
+                    VStack {
+                        Text(context.state.subtitle)
+                            .font(.subheadline)
+                        Text("Calls: \(context.state.callsCount)")
+                            .font(.caption)
+                            .foregroundStyle(.secondary)
+                    }
+                }
+            } compactLeading: {
+                Text("🦉")
+            } compactTrailing: {
+                Text("\(context.state.callsCount)")
+            } minimal: {
+                Text("\(context.state.callsCount)")
+            }
+        }
+    }
+}
+
+@main
+struct OwlLogActivityBundle: WidgetBundle {
+    var body: some Widget {
+        OwlLogActivityWidget()
+    }
+}
+```
+
+Then in your app target, enable **Supports Live Activities** (Signing & Capabilities). Build on a device (iOS 16.1+) and start the session via `OwlActivityKitLifecycleDelegate` or `OwlActivityKitSession.shared.start()`.
+
+> Shortcut: we ship a template at `Examples/OwlLogActivityWidget.swift`. Copy that file into your Widget Extension target and adjust visuals as needed.
 
 OwlLog is built with the latest Swift standards:
 - **Actors**: Uses the `OwlLogger` actor to prevent data races.
