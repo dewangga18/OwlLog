@@ -143,6 +143,14 @@ struct MyApp: App {
                         OwlOverlay(isVisible: false)
                     }
                 }
+                .onOpenURL { url in
+                    guard url.scheme == "owllog" else { return }
+                    guard url.host == "open-inspector" else { return }
+                    
+                    Task { @MainActor in
+                        OwlService.shared.openInspector()
+                    }
+                }
         }
     }
 }
@@ -202,7 +210,7 @@ struct OwlLogActivityBundle: WidgetBundle {
 }
 ```
 
-Then in your app target, enable **Supports Live Activities** (Signing & Capabilities). Build on a device (iOS 16.1+) and start the session via `OwlActivityKitLifecycleDelegate` or `OwlActivityKitSession.shared.start()`.
+Then in your app target, enable **Supports Live Activities** (Signing & Capabilities). Xcode will add `NSSupportsLiveActivities=YES` to your Info.plist; keep it if you edit the plist manually. Build on a device (iOS 16.1+) and start the session via `OwlActivityKitLifecycleDelegate` or `OwlActivityKitSession.shared.start()`.
 
 > Shortcut: we ship a template at `Examples/OwlLogActivityWidget.swift`. Copy that file into your Widget Extension target and adjust visuals as needed.
 
