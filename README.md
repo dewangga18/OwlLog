@@ -125,21 +125,21 @@ OwlOverlay(isVisible: false)
 
 ---
 
-## 🖥 UI Integration (Now Playing)
+## 🖥 UI Integration (Live Activiy)
 
-If you want a "Now Playing" style card (Control Center / lock screen) while the app is active, OwlLogUI also provides a lightweight MediaPlayer integration.
+> Live Activities require iOS 16.1+. On earlier versions the APIs no-op safely.
 
 Notes:
-- iOS does not provide a callback for tapping the Now Playing card itself.
-- To mimic "tap to open", OwlLogUI maps remote buttons (Play/Toggle) to `OwlService.shared.openInspector()` (Pause closes the inspector).
-- This session is started only while the app is active (foreground).
+- Live Activities appear on Lock Screen / Dynamic Island (not in Notification Center).
+- Tapping the Live Activity opens your app; OwlLogUI also maps remote commands (Play/Toggle) to `OwlService.shared.openInspector()` (Pause closes the inspector) on supported devices.
+- The session is started via the provided lifecycle delegate; data is updated automatically when network logs change.
 
-### 1. Install the Now Playing Lifecycle Delegate
+### 1. Install the Owl Delegate
 
 ```swift
 @main
 struct MyApp: App {
-    @UIApplicationDelegateAdaptor(OwlNowPlayingLifecycleDelegate.self)
+@UIApplicationDelegateAdaptor(OwlActivityKitLifecycleDelegate.self)
     private var nowPlayingLifecycle
 
     var body: some Scene {
@@ -161,9 +161,9 @@ If you prefer manual control, call:
 
 ```swift
 Task { @MainActor in
-    OwlNowPlayingSession.shared.start()
+    OwlActivityKitSession.shared.start()
     // ...
-    OwlNowPlayingSession.shared.stop()
+    OwlActivityKitSession.shared.stop()
 }
 ```
 
