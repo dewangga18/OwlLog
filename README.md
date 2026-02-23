@@ -117,14 +117,6 @@ OwlOverlay(
 )
 ```
 
-You can also hide the floating button while keeping the inspector sheet modifier active (useful when you want to open the inspector from Notifications / Now Playing):
-
-```swift
-OwlOverlay(isVisible: false)
-```
-
----
-
 ## 🖥 UI Integration (Live Activity)
 
 > Live Activities require iOS 16.1+. On earlier versions the APIs no-op safely.
@@ -141,7 +133,7 @@ Notes:
 @main
 struct MyApp: App {
 @UIApplicationDelegateAdaptor(OwlActivityKitLifecycleDelegate.self)
-    private var nowPlayingLifecycle
+    private var delegate
 
     var body: some Scene {
         WindowGroup {
@@ -156,19 +148,7 @@ struct MyApp: App {
 }
 ```
 
-### 2. Customize (Optional)
-
-If you prefer manual control, call:
-
-```swift
-Task { @MainActor in
-    OwlActivityKitSession.shared.start()
-    // ...
-    OwlActivityKitSession.shared.stop()
-}
-```
-
-### 3. Add the WidgetKit target (required for UI)
+### 2. Add the WidgetKit target (required for UI)
 
 Create a Widget Extension in your app, then add:
 
@@ -225,6 +205,18 @@ struct OwlLogActivityBundle: WidgetBundle {
 Then in your app target, enable **Supports Live Activities** (Signing & Capabilities). Build on a device (iOS 16.1+) and start the session via `OwlActivityKitLifecycleDelegate` or `OwlActivityKitSession.shared.start()`.
 
 > Shortcut: we ship a template at `Examples/OwlLogActivityWidget.swift`. Copy that file into your Widget Extension target and adjust visuals as needed.
+
+### 3. Customize (Optional)
+
+If you prefer manual control, call:
+
+```swift
+Task { @MainActor in
+    OwlActivityKitSession.shared.start()
+    // ...
+    OwlActivityKitSession.shared.stop()
+}
+```
 
 OwlLog is built with the latest Swift standards:
 - **Actors**: Uses the `OwlLogger` actor to prevent data races.

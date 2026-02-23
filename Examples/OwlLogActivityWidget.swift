@@ -6,6 +6,7 @@ import ActivityKit
 import OwlLogUI
 import SwiftUI
 
+@available(iOSApplicationExtension 16.1, *)
 struct OwlLogActivityWidget: Widget {
     var body: some WidgetConfiguration {
         ActivityConfiguration(for: OwlLiveActivityAttributes.self) { context in
@@ -19,6 +20,7 @@ struct OwlLogActivityWidget: Widget {
                     .foregroundStyle(.secondary)
             }
             .padding()
+            .widgetURL(URL(string: "owllog://open-inspector"))
         } dynamicIsland: { context in
             DynamicIsland {
                 DynamicIslandExpandedRegion(.center) {
@@ -29,9 +31,10 @@ struct OwlLogActivityWidget: Widget {
                             .font(.caption)
                             .foregroundStyle(.secondary)
                     }
+                    .widgetURL(URL(string: "owllog://open-inspector"))
                 }
             } compactLeading: {
-                Text("🦉")
+                Text("🦉OwlLog")
             } compactTrailing: {
                 Text("\(context.state.callsCount)")
             } minimal: {
