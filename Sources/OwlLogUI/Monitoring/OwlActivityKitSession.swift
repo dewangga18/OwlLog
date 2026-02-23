@@ -14,6 +14,7 @@ public final class OwlActivityKitSession {
 
     private init() {}
 
+    @MainActor
     public func start() {
         guard ActivityAuthorizationInfo().areActivitiesEnabled else { return }
         guard activity == nil else { return }
@@ -43,6 +44,7 @@ public final class OwlActivityKitSession {
         }
     }
 
+    @MainActor
     public func updateIfNeeded(calls: [OwlHTTPCall]) {
         guard isActive, let activity else { return }
         let count = calls.count
@@ -60,6 +62,7 @@ public final class OwlActivityKitSession {
             await activity.update(using: content)
         }
     }
+
 }
 
 @available(iOS 16.1, *)
