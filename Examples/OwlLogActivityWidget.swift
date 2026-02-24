@@ -6,7 +6,7 @@ import ActivityKit
 import OwlLogUI
 import SwiftUI
 
-@available(iOSApplicationExtension 16.1, *)
+@available(iOSApplicationExtension 16.2, *)
 struct OwlLogActivityWidget: Widget {
     var body: some WidgetConfiguration {
         ActivityConfiguration(for: OwlLiveActivityAttributes.self) { context in
@@ -20,7 +20,7 @@ struct OwlLogActivityWidget: Widget {
                     .foregroundStyle(.secondary)
             }
             .padding()
-            .widgetURL(URL(string: "owllog://open-inspector"))
+            .widgetURL(URL(string: "owllog://open-inspector")) // your deep link
         } dynamicIsland: { context in
             DynamicIsland {
                 DynamicIslandExpandedRegion(.center) {

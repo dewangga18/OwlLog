@@ -2,7 +2,7 @@
 
 All notable changes to the OwlLog project will be documented in this file.
 
-## [1.0.5] - 2026-02-20
+## [1.0.5] 
 
 ### Added
 - **Live Activity integration** — Added `OwlActivityKitSession` and `OwlActivityKitLifecycleDelegate` to drive a Live Activity (iOS 16.1+) that mirrors network log updates.

@@ -119,13 +119,15 @@ OwlOverlay(
 
 ## 🖥 UI Integration (Live Activity)
 
-> Live Activities require iOS 16.1+. On earlier versions the APIs no-op safely.
+> Live Activities require iOS 16.2+. On earlier versions the APIs no-op safely.
 
-Notes:
-- Live Activities appear on Lock Screen / Dynamic Island (not in Notification Center).
-- Tapping the Live Activity opens your app; OwlLogUI also maps remote commands (Play/Toggle) to `OwlService.shared.openInspector()` (Pause closes the inspector) on supported devices.
-- The session is started via the provided lifecycle delegate; data is updated automatically when network logs change.
-- To render the Live Activity, your host app must include a WidgetKit target with an `ActivityConfiguration` for `OwlLiveActivityAttributes` and enable **Supports Live Activities** on the app target. Swift packages cannot add this automatically—add the widget target to your app project.
+Setup checklist:
+- Runtime: iOS 16.2+ for Live Activities (package itself supports iOS 15+, calls no-op below 16.2).
+- Host app target: add **Live Activities** capability (adds `NSSupportsLiveActivities=YES` to Info.plist).
+- Widget target: include an `ActivityConfiguration` for `OwlLiveActivityAttributes` (see step 2).
+- Deep link: register the same URL scheme used in `.widgetURL` (e.g. `owllog://open-inspector`) under URL Types, and handle it in `onOpenURL` to open the inspector.
+- Device: build/run on a real iPhone (not iPad/Mac), iOS 16.2+.
+- Behavior: tapping the Live Activity opens your app; Play/Toggle maps to `OwlService.shared.openInspector()` and Pause closes it on supported devices.
 
 ### 1. Install the Owl Delegate
 
@@ -134,10 +136,6 @@ Notes:
 struct MyApp: App {
 @UIApplicationDelegateAdaptor(OwlActivityKitLifecycleDelegate.self)
     private var delegate
-    
-    init() {
-        OwlLiveActivityCleanup.dismissExisting()
-    }
 
     var body: some Scene {
         WindowGroup {
@@ -184,6 +182,7 @@ struct OwlLogActivityWidget: Widget {
                     .foregroundStyle(.secondary)
             }
             .padding()
+            .widgetURL(URL(string: "owllog://open-inspector")) // your deep link
         } dynamicIsland: { context in
             DynamicIsland {
                 DynamicIslandExpandedRegion(.center) {
@@ -213,8 +212,6 @@ struct OwlLogActivityBundle: WidgetBundle {
     }
 }
 ```
-
-Then in your app target, enable **Supports Live Activities** (Signing & Capabilities). Xcode will add `NSSupportsLiveActivities=YES` to your Info.plist; keep it if you edit the plist manually. Build on a device (iOS 16.1+) and start the session via `OwlActivityKitLifecycleDelegate` or `OwlActivityKitSession.shared.start()`.
 
 > Shortcut: we ship a template at `Examples/OwlLogActivityWidget.swift`. Copy that file into your Widget Extension target and adjust visuals as needed.
 
