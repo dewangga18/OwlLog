@@ -1,4 +1,4 @@
-<img width="4717" height="5957" alt="SDK Banner-1" src="https://github.com/user-attachments/assets/9b6ae16a-c380-4f54-9aeb-ebfe9aa34996" /> <br>
+<img width="6005" height="5957" alt="Image" src="https://github.com/user-attachments/assets/3e5348cc-7636-4759-a5db-812dbf0d48d0" /> <br>
 # OwlLog 🦉
 
 **OwlLog** is a lightweight and powerful iOS SDK for real-time HTTP/HTTPS network traffic monitoring directly on the device. Built entirely with modern Swift, it supports Swift 5.9+, Swift 6 Concurrency, and SwiftUI.
@@ -27,7 +27,7 @@ Add the package to your project and choose the target that fits your needs:
 **Package.swift Integration:**
 ```swift
 dependencies: [
-    .package(url: "https://github.com/dewangga18/OwlLog.git", from: "1.0.3")
+    .package(url: "https://github.com/dewangga18/OwlLog.git", from: "1.0.5")
 ]
 ```
 
@@ -117,7 +117,114 @@ OwlOverlay(
 )
 ```
 
----
+## 🖥 UI Integration (Live Activity)
+
+> Live Activities require iOS 16.2+. On earlier versions, the APIs are no-ops safely.
+
+Setup checklist:
+- Runtime: iOS 16.2+ for Live Activities (package itself supports iOS 15+, calls no-op below 16.2).
+- Host app target: add **Live Activities** capability (adds `NSSupportsLiveActivities=YES` to Info.plist).
+- Widget target: include an `ActivityConfiguration` for `OwlLiveActivityAttributes` (see step 2).
+- Deep link: register the same URL scheme used in `.widgetURL` (e.g. `owllog://open-inspector`) under URL Types, and handle it in `onOpenURL` to open the inspector.
+- Behavior: tapping the Live Activity opens your app; Play/Toggle maps to `OwlService.shared.openInspector()` and Pause closes it on supported devices.
+
+### 1. Install the Owl Delegate
+
+```swift
+@main
+struct MyApp: App {
+@UIApplicationDelegateAdaptor(OwlActivityKitLifecycleDelegate.self)
+    private var delegate
+
+    var body: some Scene {
+        WindowGroup {
+            ContentView()
+                .overlay {
+                    if AppEnvironment.current != .production {
+                        OwlOverlay(isVisible: false)
+                    }
+                }
+                .onOpenURL { url in
+                    guard url.scheme == "owllog" else { return }
+                    guard url.host == "open-inspector" else { return }
+                    
+                    Task { @MainActor in
+                        OwlService.shared.openInspector()
+                    }
+                }
+        }
+    }
+}
+```
+
+### 2. Add the WidgetKit target (required for UI)
+
+Create a Widget Extension in your app, then add:
+
+```swift
+import WidgetKit
+import ActivityKit
+import SwiftUI
+import OwlLogUI
+
+struct OwlLogActivityWidget: Widget {
+    var body: some WidgetConfiguration {
+        ActivityConfiguration(for: OwlLiveActivityAttributes.self) { context in
+            // Lock Screen view
+            VStack(alignment: .leading, spacing: 4) {
+                Text("OwlLog")
+                    .font(.headline)
+                Text(context.state.subtitle)
+                    .font(.subheadline)
+                Text("Calls: \(context.state.callsCount)")
+                    .font(.caption)
+                    .foregroundStyle(.secondary)
+            }
+            .padding()
+            .widgetURL(URL(string: "owllog://open-inspector")) // your deep link
+        } dynamicIsland: { context in
+            DynamicIsland {
+                DynamicIslandExpandedRegion(.center) {
+                    VStack {
+                        Text(context.state.subtitle)
+                            .font(.subheadline)
+                        Text("Calls: \(context.state.callsCount)")
+                            .font(.caption)
+                            .foregroundStyle(.secondary)
+                    }
+                }
+            } compactLeading: {
+                Text("🦉")
+            } compactTrailing: {
+                Text("\(context.state.callsCount)")
+            } minimal: {
+                Text("\(context.state.callsCount)")
+            }
+        }
+    }
+}
+
+@main
+struct OwlLogActivityBundle: WidgetBundle {
+    var body: some Widget {
+        OwlLogActivityWidget()
+    }
+}
+```
+
+> Shortcut: we ship a template at `Examples/OwlLogActivityWidget.swift`. Copy that file into your Widget Extension target and adjust visuals as needed.
+
+### 3. Customize (Optional)
+
+If you prefer manual control, call:
+
+```swift
+Task { @MainActor in
+    OwlActivityKitSession.shared.start()
+    // ...
+    OwlActivityKitSession.shared.stop()
+}
+```
 
 OwlLog is built with the latest Swift standards:
 - **Actors**: Uses the `OwlLogger` actor to prevent data races.

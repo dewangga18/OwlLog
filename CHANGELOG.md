@@ -2,6 +2,13 @@
 
 All notable changes to the OwlLog project will be documented in this file.
 
+## [1.0.5] - 2026-02-24
+
+### Added
+- **Live Activity integration** — Added `OwlActivityKitSession` and `OwlActivityKitLifecycleDelegate` to drive a Live Activity (iOS 16.1+) that mirrors network log updates.
+- **SwiftUI lifecycle guidance** — Documented recommended integration patterns in `README.md` for foreground/background handling.
+- **Hidden overlay mode** — Added `OwlOverlay(isActive:)` so you can hide the floating button while keeping the inspector sheet modifier active.
+
 ## [1.0.4] - 2026-02-12
 
 ### Added
