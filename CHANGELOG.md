@@ -2,6 +2,19 @@
 
 All notable changes to the OwlLog project will be documented in this file.
 
+## [1.0.6] - 2026-03-11
+
+### Added
+- **Call detail swipe navigation** — Swipe left/right on Call Details to switch tabs (Headers/Response/Error).
+
+### Changed
+- **ActivityKit lifecycle safety** — Ensured Live Activity cleanup runs on the main actor and completes before starting a new session.
+- **Concurrency safety** — Main-actor isolation for ActivityKit session and lifecycle delegate to prevent cross-actor state access.
+
+### Fixed
+- **UI hang risk** — Removed blocking `DispatchGroup` wait during Live Activity stop.
+- **Safe area background** — Headers view now fills background even when content is short.
+
 ## [1.0.5] - 2026-02-24
 
 ### Added

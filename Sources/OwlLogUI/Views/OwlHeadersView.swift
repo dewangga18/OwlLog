@@ -19,6 +19,21 @@ public struct OwlHeadersView: View {
     /// Indicates whether the replay process is currently active.
     let isReplaying: Bool
 
+    /// Controls the expanded state of the "General" disclosure section.
+    @State var isOpenGeneral = true
+
+    /// Controls the expanded state of the "Request" disclosure section.
+    @State var isOpenRequest = true
+
+    /// Controls the expanded state of the "Response" disclosure section.
+    @State var isOpenResponse = true
+
+    /// Controls the expanded state of the "Data Field" disclosure section.
+    @State var isOpenDataField = true
+
+    /// Controls the expanded state of the "Data File" disclosure section.
+    @State var isOpenDataFile = true
+
     public init(
         call: OwlHTTPCall,
         onReplay: (() -> Void)? = nil,
@@ -54,7 +69,7 @@ public struct OwlHeadersView: View {
 private extension OwlHeadersView {
     /// Displays general information about the HTTP request and response.
     var generalSection: some View {
-        DisclosureGroup("General") {
+        DisclosureGroup("General", isExpanded: $isOpenGeneral) {
             VStack(alignment: .leading, spacing: 8) {
                 OwlRowView(title: "Request URL", value: call.uri)
                 OwlRowView(title: "Request Method", value: call.method)
@@ -72,7 +87,7 @@ private extension OwlHeadersView {
     @ViewBuilder
     var requestHeadersSection: some View {
         if let headers = call.request?.sortedHeaders {
-            DisclosureGroup("Request Headers") {
+            DisclosureGroup("Request Headers", isExpanded: $isOpenRequest) {
                 VStack(alignment: .leading, spacing: 4) {
                     ForEach(headers, id: \.key) { key, value in
                         OwlRowView(title: key, value: value)
@@ -88,7 +103,7 @@ private extension OwlHeadersView {
     @ViewBuilder
     var responseHeadersSection: some View {
         if let responseHeaders = call.response?.sortedHeaders {
-            DisclosureGroup("Response Headers") {
+            DisclosureGroup("Response Headers", isExpanded: $isOpenResponse) {
                 VStack(alignment: .leading, spacing: 4) {
                     ForEach(responseHeaders, id: \.key) { key, value in
                         OwlRowView(title: key, value: value)
@@ -104,7 +119,7 @@ private extension OwlHeadersView {
     @ViewBuilder
     var formDataFieldsSection: some View {
         if let fields = call.request?.formDataFields, !fields.isEmpty {
-            DisclosureGroup("Form Data Fields") {
+            DisclosureGroup("Form Data Fields", isExpanded: $isOpenDataField) {
                 VStack(alignment: .leading, spacing: 4) {
                     ForEach(fields, id: \.name) { field in
                         OwlRowView(title: field.name, value: field.value)
@@ -120,7 +135,7 @@ private extension OwlHeadersView {
     @ViewBuilder
     var formDataFilesSection: some View {
         if let files = call.request?.formDataFiles, !files.isEmpty {
-            DisclosureGroup("Form Data Files") {
+            DisclosureGroup("Form Data Files", isExpanded: $isOpenDataFile) {
                 VStack(alignment: .leading, spacing: 4) {
                     ForEach(files, id: \.fileName) { file in
                         OwlRowView(

@@ -7,10 +7,6 @@ import UIKit
 @MainActor public final class OwlActivityKitLifecycleDelegate: NSObject, UIApplicationDelegate {
     /// The cancellables for the session.
     private var cancellables: Set<AnyCancellable> = []
-    /// Whether the session is active.
-    private var isSessionActive = false
-    /// The task for starting the session.
-    private var startTask: Task<Void, Never>?
 
     override public init() {
         super.init()
@@ -22,12 +18,22 @@ import UIKit
         return true
     }
 
-    /// The application did become active.
+    /// Starts a session when the app becomes active.
     public func applicationDidBecomeActive(_ application: UIApplication) {
         startSession()
     }
 
-    /// The application will terminate.
+    /// Stops the session when the app becomes inactive.
+    public func applicationWillResignActive(_ application: UIApplication) {
+        stopSession()
+    }
+
+    /// Stops the session when the app enters background.
+    public func applicationDidEnterBackground(_ application: UIApplication) {
+        stopSession()
+    }
+
+    /// Stops the session before the app terminates.
     public func applicationWillTerminate(_ application: UIApplication) {
         stopSession()
     }
@@ -35,14 +41,10 @@ import UIKit
     /// Starts the session.
     private func startSession() {
         if #available(iOS 16.2, *) {
-            guard !isSessionActive else { return }
-            isSessionActive = true
             cancellables.removeAll()
 
-            startTask?.cancel()
-            startTask = Task { @MainActor in
+            Task { @MainActor in
                 await OwlLiveActivityCleanup.dismissExisting()
-                guard self.isSessionActive else { return }
                 OwlActivityKitSession.shared.start()
             }
 
@@ -61,9 +63,6 @@ import UIKit
     private func stopSession() {
         cancellables.removeAll()
         if #available(iOS 16.2, *) {
-            isSessionActive = false
-            startTask?.cancel()
-            startTask = nil
             OwlActivityKitSession.shared.stop()
         }
     }
