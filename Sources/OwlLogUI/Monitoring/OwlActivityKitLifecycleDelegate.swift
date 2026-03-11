@@ -22,12 +22,22 @@ import UIKit
         return true
     }
 
-    /// The application did become active.
+    /// Starts a session when the app becomes active.
     public func applicationDidBecomeActive(_ application: UIApplication) {
         startSession()
     }
 
-    /// The application will terminate.
+    /// Stops the session when the app becomes inactive.
+    public func applicationWillResignActive(_ application: UIApplication) {
+        stopSession()
+    }
+
+    /// Stops the session when the app enters background.
+    public func applicationDidEnterBackground(_ application: UIApplication) {
+        stopSession()
+    }
+
+    /// Stops the session before the app terminates.
     public func applicationWillTerminate(_ application: UIApplication) {
         stopSession()
     }
