@@ -8,9 +8,12 @@
 import OwlLog
 import SwiftUI
 
+/// The syntax highlighter for OwlLog.
 public enum OwlSyntaxHighlighter {
+    /// The maximum length for syntax highlighting.
     private static let maxHighlightLength = 50_000
 
+    /// Creates a view for the given JSON.
     public static func jsonView(_ json: String) -> some View {
         ScrollView {
             if json.isEmpty {
@@ -25,6 +28,7 @@ public enum OwlSyntaxHighlighter {
         }
     }
 
+    /// Creates a view for the given XML.
     public static func xmlView(_ xml: String) -> some View {
         ScrollView {
             if xml.isEmpty {
@@ -39,12 +43,14 @@ public enum OwlSyntaxHighlighter {
         }
     }
 
+    /// The empty view for syntax highlighting.
     private static var emptyView: some View {
         Text("No content")
             .foregroundColor(.secondary)
             .frame(maxWidth: .infinity, maxHeight: .infinity)
     }
 
+    /// Highlights the given JSON.
     private static func highlightJSON(_ json: String) -> AttributedString {
         let content = truncateIfNeeded(json)
         var attributed = AttributedString(content)
@@ -60,6 +66,7 @@ public enum OwlSyntaxHighlighter {
         return attributed
     }
 
+    /// Highlights the given XML.
     private static func highlightXML(_ xml: String) -> AttributedString {
         let content = truncateIfNeeded(xml)
         var attributed = AttributedString(content)
@@ -71,16 +78,14 @@ public enum OwlSyntaxHighlighter {
         return attributed
     }
 
+    /// Truncates the given text if needed.
     private static func truncateIfNeeded(_ text: String) -> String {
         guard text.count > maxHighlightLength else { return text }
         return String(text.prefix(maxHighlightLength)) + "\n\n... (content truncated for performance)"
     }
 
-    private static func highlightPattern(
-        _ pattern: String,
-        in attributed: inout AttributedString,
-        color: Color
-    ) {
+    /// Highlights the given pattern.
+    private static func highlightPattern(_ pattern: String, in attributed: inout AttributedString, color: Color) {
         guard let regex = try? NSRegularExpression(pattern: pattern) else { return }
 
         let string = String(attributed.characters)

@@ -8,23 +8,28 @@
 import Foundation
 import SwiftUI
 
-@MainActor
-public final class OwlService: ObservableObject {
+/// The service that manages all HTTP calls.
+@MainActor public final class OwlService: ObservableObject {
+    /// The shared instance of the service.
     public static let shared = OwlService()
 
-    private init() {}
-
+    /// The list of all HTTP calls.
     @Published public private(set) var calls: [OwlHTTPCall] = []
+    /// The statistics of all HTTP calls.
     @Published public private(set) var stats: OwlStats = .zero
+    /// Whether the inspector is opened.
     @Published public var isInspectorOpened: Bool = false
 
+    /// The URL session to use for HTTP calls.
     public var urlSession: URLSession? = .shared
 
+    /// Adds a new HTTP call to the list.
     public func addCall(_ call: OwlHTTPCall) {
         calls.append(call)
         updateStats()
     }
 
+    /// Adds a new response to an existing HTTP call.
     public func addResponse(_ response: OwlHTTPResponse, requestId: String, duration: Int) {
         guard let index = calls.firstIndex(where: { $0.id == requestId }) else {
             #if DEBUG
@@ -43,6 +48,7 @@ public final class OwlService: ObservableObject {
         updateStats()
     }
 
+    /// Adds a new error to an existing HTTP call.
     public func addError(_ error: OwlHTTPError, requestId: String, duration: Int) {
         guard let index = calls.firstIndex(where: { $0.id == requestId }) else {
             #if DEBUG
@@ -61,16 +67,19 @@ public final class OwlService: ObservableObject {
         updateStats()
     }
 
+    /// Clears all HTTP calls.
     public func clearCalls() {
         calls.removeAll()
         updateStats()
     }
 
+    /// Opens the inspector.
     public func openInspector() {
         guard !isInspectorOpened else { return }
         isInspectorOpened = true
     }
 
+    /// Returns a filtered list of HTTP calls based on a query.
     public func filteredCalls(_ query: String) -> [OwlHTTPCall] {
         let reversed = calls.reversed()
 
@@ -78,6 +87,7 @@ public final class OwlService: ObservableObject {
         return reversed.filter { matches($0, query: query) }
     }
 
+    /// Returns whether a call matches a query.
     private func matches(_ call: OwlHTTPCall, query: String) -> Bool {
         let normalized = query.lowercased()
 
@@ -96,14 +106,17 @@ public final class OwlService: ObservableObject {
         }
     }
 
+    /// Closes the inspector.
     public func closeInspector() {
         isInspectorOpened = false
     }
 
+    /// Updates the statistics.
     private func updateStats() {
         self.stats = OwlStats.calculate(from: calls)
     }
 
+    /// Replays an HTTP call.
     public func replay(_ call: OwlHTTPCall) async throws -> (response: HTTPURLResponse, data: Data) {
         guard let session = urlSession else {
             throw NSError(

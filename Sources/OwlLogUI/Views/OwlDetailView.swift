@@ -8,13 +8,20 @@
 import OwlLog
 import SwiftUI
 
+/// The detail view for OwlLog.
 public struct OwlDetailView: View {
+    /// The HTTP call to display.
     let call: OwlHTTPCall
 
+    /// The state for the replay functionality.
     @State private var isReplaying = false
+    /// The state for the result dialog.
     @State private var showResultDialog = false
+    /// The response for the replay functionality.
     @State private var replayResponse: HTTPURLResponse?
+    /// The data for the replay functionality.
     @State private var replayData: Data?
+    /// The error for the replay functionality.
     @State private var replayError: Error?
 
     public init(call: OwlHTTPCall) {
@@ -23,30 +30,11 @@ public struct OwlDetailView: View {
 
     public var body: some View {
         tabView
-            .toolbar {
-                ToolbarItem(placement: .owlTrailing) {
-                    Button {
-                        OwlClipboard.copy(call.request?.curl ?? "")
-                    } label: {
-                        HStack {
-                            Image(systemName: "doc.on.doc")
-                            Text("cURL")
-                        }
-                    }
-                }
-            }
+            .toolbar(content: toolbarItems)
             .alert("Replay Result", isPresented: $showResultDialog) {
                 Button("Close", role: .cancel) {}
 
-                if replayData != nil {
-                    Button("Copy Response") {
-                        if let data = replayData,
-                           let string = String(data: data, encoding: .utf8)
-                        {
-                            OwlClipboard.copy(string)
-                        }
-                    }
-                }
+                replayAlertButtons
             } message: {
                 replayMessage
             }
@@ -56,6 +44,12 @@ public struct OwlDetailView: View {
 // MARK: - Functions
 
 private extension OwlDetailView {
+    /// Handles the copy curl functionality.
+    func handleCopyCurl() {
+        OwlClipboard.copy(call.request?.curl ?? "")
+    }
+
+    /// Handles the replay functionality.
     func handleReplay() {
         guard OwlService.shared.urlSession != nil else {
             return
@@ -91,8 +85,32 @@ private extension OwlDetailView {
 // MARK: - Views
 
 private extension OwlDetailView {
-    // MARK: - Tab View
+    /// The buttons for the replay alert.
+    @ViewBuilder var replayAlertButtons: some View {
+        if replayData != nil {
+            Button("Copy Response") {
+                if let data = replayData,
+                   let string = String(data: data, encoding: .utf8)
+                {
+                    OwlClipboard.copy(string)
+                }
+            }
+        }
+    }
 
+    /// The toolbar items for the detail view.
+    func toolbarItems() -> some ToolbarContent {
+        ToolbarItem(placement: .owlTrailing) {
+            Button(action: handleCopyCurl) {
+                HStack {
+                    Image(systemName: "doc.on.doc")
+                    Text("cURL")
+                }
+            }
+        }
+    }
+
+    /// The tab view for the detail view.
     @ViewBuilder
     var tabView: some View {
         #if swift(>=6.0)
@@ -135,8 +153,7 @@ private extension OwlDetailView {
         #endif
     }
 
-    // MARK: - Fallback Tab View
-
+    /// The fallback tab view for the detail view.
     @ViewBuilder
     var fallbackTabView: some View {
         TabView {
@@ -167,8 +184,7 @@ private extension OwlDetailView {
         .owlNavigationBarTitleDisplayModeInline()
     }
 
-    // MARK: - Replay Message
-
+    /// The replay message for the detail view.
     @ViewBuilder
     var replayMessage: some View {
         if let response = replayResponse {

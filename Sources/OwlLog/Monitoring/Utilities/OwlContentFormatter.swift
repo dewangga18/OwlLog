@@ -7,6 +7,7 @@
 
 import Foundation
 
+/// The type of content.
 public enum OwlContentType: String {
     case json
     case xml
@@ -15,7 +16,9 @@ public enum OwlContentType: String {
     case text
 }
 
+/// A utility for formatting content.
 public enum OwlContentFormatter {
+    /// Converts a body to a string.
     public static func convertToString(_ body: Any) -> String {
         if let data = body as? Data {
             return String(decoding: data, as: UTF8.self)
@@ -23,10 +26,8 @@ public enum OwlContentFormatter {
         return String(describing: body)
     }
 
-    public static func detectContentType(
-        headers: [String: String]?,
-        body: Any?
-    ) -> OwlContentType {
+    /// Detects the content type of a body.
+    public static func detectContentType(headers: [String: String]?, body: Any?) -> OwlContentType {
         if let headers {
             let contentType = headers["content-type"] ?? headers["Content-Type"]
             if let type = contentType?.lowercased() {
@@ -64,6 +65,7 @@ public enum OwlContentFormatter {
         return .text
     }
 
+    /// Detects the content type from a string.
     private static func detectFromString(_ string: String) -> OwlContentType {
         let trimmed = string.trimmingCharacters(in: .whitespacesAndNewlines)
 
@@ -81,6 +83,7 @@ public enum OwlContentFormatter {
         return .text
     }
 
+    /// Formats a JSON object.
     public static func formatJSON(_ json: Any) -> String {
         var jsonObject: Any?
 
@@ -112,6 +115,7 @@ public enum OwlContentFormatter {
         }
     }
 
+    /// Formats an XML object.
     public static func formatXML(_ xml: Any) -> String {
         let xmlString = convertToString(xml)
         var result = ""
@@ -157,6 +161,7 @@ public enum OwlContentFormatter {
         return result
     }
 
+    /// Formats an HTML object.
     public static func formatHTML(_ html: Any) -> String {
         return formatXML(html)
     }

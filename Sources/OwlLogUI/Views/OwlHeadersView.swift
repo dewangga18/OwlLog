@@ -8,9 +8,15 @@
 import OwlLog
 import SwiftUI
 
+/// The header view for OwlLog.
 public struct OwlHeadersView: View {
+    /// The HTTP call containing request and response data to display.
     let call: OwlHTTPCall
+
+    /// Optional callback triggered when the replay action is invoked.
     let onReplay: (() -> Void)?
+
+    /// Indicates whether the replay process is currently active.
     let isReplaying: Bool
 
     public init(
@@ -23,6 +29,7 @@ public struct OwlHeadersView: View {
         self.isReplaying = isReplaying
     }
 
+    /// The main body rendering the header sections of the HTTP call.
     public var body: some View {
         ScrollView {
             VStack(alignment: .leading, spacing: 16) {
@@ -45,8 +52,7 @@ public struct OwlHeadersView: View {
 }
 
 private extension OwlHeadersView {
-    // MARK: - General Section
-
+    /// Displays general information about the HTTP request and response.
     var generalSection: some View {
         DisclosureGroup("General") {
             VStack(alignment: .leading, spacing: 8) {
@@ -62,69 +68,69 @@ private extension OwlHeadersView {
         }
     }
 
-    // MARK: - Request Headers Section
-
+    /// Displays the request headers associated with the HTTP call.
+    @ViewBuilder
     var requestHeadersSection: some View {
-        DisclosureGroup("Request Headers") {
-            VStack(alignment: .leading, spacing: 4) {
-                ForEach(call.request?.sortedHeaders ?? [], id: \.key) { key, value in
-                    OwlRowView(title: key, value: value)
+        if let headers = call.request?.sortedHeaders {
+            DisclosureGroup("Request Headers") {
+                VStack(alignment: .leading, spacing: 4) {
+                    ForEach(headers, id: \.key) { key, value in
+                        OwlRowView(title: key, value: value)
+                    }
                 }
+                .frame(maxWidth: .infinity, alignment: .leading)
+                .padding(.top, 8)
             }
-            .frame(maxWidth: .infinity, alignment: .leading)
-            .padding(.top, 8)
         }
     }
 
-    // MARK: - Response Headers Section
-
+    /// Displays the response headers returned by the server.
+    @ViewBuilder
     var responseHeadersSection: some View {
-        DisclosureGroup("Response Headers") {
-            VStack(alignment: .leading, spacing: 4) {
-                ForEach(call.response?.sortedHeaders ?? [], id: \.key) { key, value in
-                    OwlRowView(title: key, value: value)
+        if let responseHeaders = call.response?.sortedHeaders {
+            DisclosureGroup("Response Headers") {
+                VStack(alignment: .leading, spacing: 4) {
+                    ForEach(responseHeaders, id: \.key) { key, value in
+                        OwlRowView(title: key, value: value)
+                    }
                 }
+                .frame(maxWidth: .infinity, alignment: .leading)
+                .padding(.top, 8)
             }
-            .frame(maxWidth: .infinity, alignment: .leading)
-            .padding(.top, 8)
         }
     }
 
-    // MARK: - Form Data Section
-
+    /// Displays form data fields included in the HTTP request body.
+    @ViewBuilder
     var formDataFieldsSection: some View {
-        Group {
-            if let fields = call.request?.formDataFields, !fields.isEmpty {
-                DisclosureGroup("Form Data Fields") {
-                    VStack(alignment: .leading, spacing: 4) {
-                        ForEach(fields, id: \.name) { field in
-                            OwlRowView(title: field.name, value: field.value)
-                        }
+        if let fields = call.request?.formDataFields, !fields.isEmpty {
+            DisclosureGroup("Form Data Fields") {
+                VStack(alignment: .leading, spacing: 4) {
+                    ForEach(fields, id: \.name) { field in
+                        OwlRowView(title: field.name, value: field.value)
                     }
-                    .frame(maxWidth: .infinity, alignment: .leading)
-                    .padding(.top, 8)
                 }
+                .frame(maxWidth: .infinity, alignment: .leading)
+                .padding(.top, 8)
             }
         }
     }
 
-    // MARK: - Form Data File Section
-
+    /// Displays uploaded files included in the HTTP request form data.
+    @ViewBuilder
     var formDataFilesSection: some View {
-        Group {
-            if let files = call.request?.formDataFiles, !files.isEmpty {
-                DisclosureGroup("Form Data Files") {
-                    VStack(alignment: .leading, spacing: 4) {
-                        ForEach(files, id: \.fileName) { file in
-                            OwlRowView(
-                                title: file.fileName,
-                                value: file.contentType
-                            )
-                        }
+        if let files = call.request?.formDataFiles, !files.isEmpty {
+            DisclosureGroup("Form Data Files") {
+                VStack(alignment: .leading, spacing: 4) {
+                    ForEach(files, id: \.fileName) { file in
+                        OwlRowView(
+                            title: file.fileName,
+                            value: file.contentType
+                        )
                     }
-                    .frame(maxWidth: .infinity, alignment: .leading)
-                    .padding(.top, 8)
                 }
+                .frame(maxWidth: .infinity, alignment: .leading)
+                .padding(.top, 8)
             }
         }
     }

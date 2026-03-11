@@ -8,6 +8,7 @@
 import Foundation
 
 public extension Int {
+    /// Returns a formatted string of bytes.
     var owlFormattedBytes: String {
         switch self {
             case ..<1024:

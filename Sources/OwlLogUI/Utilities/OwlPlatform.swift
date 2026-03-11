@@ -6,9 +6,9 @@ import UIKit
 import AppKit
 #endif
 
-// MARK: - Clipboard
-
+/// The clipboard for OwlLog.
 public enum OwlClipboard {
+    /// Copies the given text to the clipboard.
     public static func copy(_ text: String) {
         #if canImport(UIKit)
         UIPasteboard.general.string = text
@@ -20,9 +20,9 @@ public enum OwlClipboard {
     }
 }
 
-// MARK: - View
-
+/// The view for OwlLog.
 extension View {
+    /// Sets the navigation bar title display mode to inline.
     @ViewBuilder
     func owlNavigationBarTitleDisplayModeInline() -> some View {
         #if os(iOS)
@@ -33,9 +33,9 @@ extension View {
     }
 }
 
-// MARK: - Color
-
+/// The color for OwlLog.
 public extension Color {
+    /// The secondary background color.
     static var owlSecondaryBackground: Color {
         #if canImport(UIKit)
         return Color(UIColor.secondarySystemBackground)
@@ -47,9 +47,9 @@ public extension Color {
     }
 }
 
-// MARK: - Toolbar Item
-
+/// The toolbar item for OwlLog.
 public extension ToolbarItemPlacement {
+    /// The trailing toolbar item.
     static var owlTrailing: ToolbarItemPlacement {
         #if os(iOS)
         return .topBarTrailing
@@ -67,9 +67,9 @@ public extension ToolbarItemPlacement {
     }
 }
 
-// MARK: - Search Field Placement
-
+/// The search field placement for OwlLog.
 public extension SearchFieldPlacement {
+    /// The automatic search field placement.
     static var owlAutomatic: SearchFieldPlacement {
         #if os(iOS)
         return .navigationBarDrawer(displayMode: .always)

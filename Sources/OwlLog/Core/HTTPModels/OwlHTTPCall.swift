@@ -7,22 +7,37 @@
 
 import Foundation
 
+/// Represents an HTTP call.
 public struct OwlHTTPCall: Sendable, Equatable, Identifiable {
+    /// The unique identifier of the call.
     public let id: String
+    /// The time when the call was created.
     public let createdTime: Date
+    /// The client that made the call.
     public let client: String
+    /// Whether the call is loading.
     public let loading: Bool
+    /// Whether the call is secure.
     public let secure: Bool
+    /// The HTTP method of the call.
     public let method: String
+    /// The endpoint of the call.
     public let endpoint: String
+    /// The server of the call.
     public let server: String
+    /// The URI of the call.
     public let uri: String
+    /// The duration of the call.
     public let duration: Int
 
+    /// The request of the call.
     public let request: OwlHTTPRequest?
+    /// The response of the call.
     public let response: OwlHTTPResponse?
+    /// The error of the call.
     public let error: OwlHTTPError?
 
+    /// Creates a new HTTP call.
     public init(
         id: String,
         createdTime: Date = Date(),
@@ -53,6 +68,7 @@ public struct OwlHTTPCall: Sendable, Equatable, Identifiable {
         self.error = error
     }
 
+    /// Returns a copy of the call with the specified properties replaced.
     public func copy(
         id: String? = nil,
         createdTime: Date? = nil,

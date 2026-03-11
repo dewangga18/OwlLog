@@ -8,61 +8,48 @@
 import OwlLog
 import SwiftUI
 
+/// The main log viewer displaying captured HTTP calls.
 public struct OwlLogView: View {
+    /// Service responsible for providing logged HTTP calls.
     @ObservedObject private var service: OwlService
 
+    /// Search query used to filter HTTP calls.
     @State private var query: String = ""
+
+    /// Indicates whether the search mode is currently active.
     @State private var isSearching = false
+
+    /// Controls presentation of the statistics screen.
     @State private var showStats = false
 
     public init(service: OwlService) {
         self.service = service
     }
 
+    /// Root view responsible for presenting the log list and the statistics sheet.
     public var body: some View {
         if #available(iOS 16.0, macOS 13.0, *) {
-            NavigationStack {
-                bodyView
-            }
-            .sheet(isPresented: $showStats) {
-                NavigationStack {
-                    OwlStatsView(service: service)
-                        .toolbar {
-                            ToolbarItem(placement: .owlTrailing) {
-                                Button("Done") { showStats = false }
-                            }
-                        }
-                }
-            }
+            NavigationStack(root: listContent)
+                .sheet(isPresented: $showStats, content: sheetView)
         } else {
-            NavigationView {
-                bodyView
-            }
-            .sheet(isPresented: $showStats) {
-                NavigationView {
-                    OwlStatsView(service: service)
-                        .toolbar {
-                            ToolbarItem(placement: .automatic) {
-                                Button("Done") { showStats = false }
-                            }
-                        }
-                }
-            }
+            NavigationView(content: listContent)
+                .sheet(isPresented: $showStats, content: sheetView)
         }
     }
 }
 
-// MARK: - Computed Variables
-
 private extension OwlLogView {
+    /// Returns HTTP calls filtered using the current search query.
     var filteredCalls: [OwlHTTPCall] {
         service.filteredCalls(query)
     }
 
+    /// Extracts the HTTP response status code from a given call.
     func statusCode(call: OwlHTTPCall) -> Int {
         call.response?.status ?? -1
     }
 
+    /// Maps an HTTP status code to a corresponding UI color.
     func statusColor(_ code: Int) -> Color {
         switch code {
             case 200..<300: return .green
@@ -73,12 +60,45 @@ private extension OwlLogView {
     }
 }
 
-// MARK: - View Builders
-
 private extension OwlLogView {
-    // MARK: - Body view
-
+    /// Builds the main navigation container depending on platform availability.
+    @ViewBuilder
     var bodyView: some View {
+        if #available(iOS 16.0, macOS 13.0, *) {
+            NavigationStack(root: listContent)
+        } else {
+            NavigationView(content: listContent)
+        }
+    }
+
+    /// Builds the sheet view used to display request statistics.
+    /// The sheet is wrapped in a navigation container to allow a toolbar with a dismiss action.
+    @ViewBuilder
+    func sheetView() -> some View {
+        if #available(iOS 16.0, macOS 13.0, *) {
+            NavigationStack {
+                OwlStatsView(service: service)
+                    .toolbar {
+                        ToolbarItem(placement: .owlTrailing) {
+                            Button("Done") { showStats = false }
+                        }
+                    }
+            }
+        } else {
+            NavigationView {
+                OwlStatsView(service: service)
+                    .toolbar {
+                        ToolbarItem(placement: .automatic) {
+                            Button("Done") { showStats = false }
+                        }
+                    }
+            }
+        }
+    }
+
+    /// Builds the list containing all logged HTTP calls and displays an empty state when no calls match the current filter.
+    @ViewBuilder
+    func listContent() -> some View {
         List {
             if filteredCalls.isEmpty {
                 emptyStateView
@@ -91,77 +111,91 @@ private extension OwlLogView {
         .navigationTitle(isSearching ? "" : "Owl Log")
         .searchable(text: $query, placement: .owlAutomatic)
         .toolbar {
-            ToolbarItem(placement: .owlLeading) {
-                Button("Done") {
-                    service.closeInspector()
-                }
+            toolbarDone
+            menuBar
+        }
+    }
+
+    /// Toolbar menu containing search toggle and additional actions such as statistics and clearing logs.
+    var menuBar: some ToolbarContent {
+        ToolbarItemGroup(placement: .owlTrailing) {
+            Button {
+                isSearching.toggle()
+            } label: {
+                Image(systemName: isSearching ? "xmark" : "magnifyingglass")
             }
 
-            ToolbarItemGroup(placement: .owlTrailing) {
+            Menu {
                 Button {
-                    isSearching.toggle()
+                    showStats = true
                 } label: {
-                    Image(systemName: isSearching ? "xmark" : "magnifyingglass")
+                    Label("Statistics", systemImage: "chart.bar")
                 }
 
-                Menu {
-                    Button {
-                        showStats = true
-                    } label: {
-                        Label("Statistics", systemImage: "chart.bar")
-                    }
-
-                    Button(role: .destructive) {
-                        service.clearCalls()
-                    } label: {
-                        Label("Clear All", systemImage: "trash")
-                    }
+                Button(role: .destructive) {
+                    service.clearCalls()
                 } label: {
-                    Image(systemName: "ellipsis.circle")
+                    Label("Clear All", systemImage: "trash")
                 }
+            } label: {
+                Image(systemName: "ellipsis.circle")
             }
         }
     }
 
-    // MARK: - Call Row
+    /// Toolbar item that dismisses the inspector and closes the log viewer.
+    var toolbarDone: some ToolbarContent {
+        ToolbarItem(placement: .owlLeading) {
+            Button("Done") {
+                service.closeInspector()
+            }
+        }
+    }
 
+    /// Builds a row displaying summary information for a single HTTP call.
     func callRow(_ call: OwlHTTPCall) -> some View {
         NavigationLink {
             OwlDetailView(call: call)
         } label: {
-            VStack(alignment: .leading, spacing: 6) {
-                HStack {
-                    Text("\(call.method) \(call.endpoint)")
-                        .foregroundColor(call.error != nil ? .red : .primary)
-
-                    Spacer()
-
-                    statusView(for: call)
-                }
-
-                Text(call.server)
-                    .font(.subheadline)
-                    .foregroundColor(.secondary)
-
-                HStack {
-                    Text(call.createdTime.formatted())
-                        .font(.caption)
-                        .foregroundColor(.secondary)
-
-                    Spacer()
-
-                    Text("\(call.duration) ms")
-                        .font(.caption)
-                        .foregroundColor(.secondary)
-                }
-            }
-            .padding(.vertical, 6)
+            labelCallRow(call)
         }
         .buttonStyle(.plain)
     }
 
-    // MARK: - Status View
+    /// Layout for the visual content of a single log row.
+    /// Displays the method, endpoint, server, timestamp, duration, and status indicator.
+    @ViewBuilder
+    func labelCallRow(_ call: OwlHTTPCall) -> some View {
+        VStack(alignment: .leading, spacing: 6) {
+            HStack {
+                Text("\(call.method) \(call.endpoint)")
+                    .foregroundColor(call.error != nil ? .red : .primary)
 
+                Spacer()
+
+                statusView(for: call)
+            }
+
+            Text(call.server)
+                .font(.subheadline)
+                .foregroundColor(.secondary)
+
+            HStack {
+                Text(call.createdTime.formatted())
+                    .font(.caption)
+                    .foregroundColor(.secondary)
+
+                Spacer()
+
+                Text("\(call.duration) ms")
+                    .font(.caption)
+                    .foregroundColor(.secondary)
+            }
+        }
+        .padding(.vertical, 6)
+    }
+
+    /// Displays the status indicator for a call including status code or loading state.
     @ViewBuilder
     func statusView(for call: OwlHTTPCall) -> some View {
         if let status = call.response?.status {
@@ -179,8 +213,8 @@ private extension OwlLogView {
         }
     }
 
-    // MARK: - Empty State View
-
+    /// Displays an empty state message when no HTTP calls are available or matched.
+    @ViewBuilder
     var emptyStateView: some View {
         VStack(spacing: 16) {
             Image(systemName: query.isEmpty ? "tray" : "magnifyingglass")

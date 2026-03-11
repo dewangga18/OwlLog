@@ -7,22 +7,35 @@
 
 import Foundation
 
+/// Represents an HTTP request.
 public struct OwlHTTPRequest: Sendable, Equatable {
+    /// The size of the request.
     public let size: Int
+    /// The time when the request was created.
     public let time: Date
+    /// The headers of the request.
     public let headers: [String: String]
+    /// The body of the request.
     public let body: Data?
+    /// The content type of the request.
     public let contentType: String?
+    /// The curl command of the request.
     public let curl: String
+    /// The cookies of the request.
     public let cookies: [HTTPCookie]
+    /// The query parameters of the request.
     public let queryParameters: [String: String]
+    /// The form data files of the request.
     public let formDataFiles: [OwlHTTPFormDataFile]?
+    /// The form data fields of the request.
     public let formDataFields: [OwlFormDataField]?
 
+    /// Returns the headers of the request sorted by key.
     public var sortedHeaders: [(key: String, value: String)] {
         headers.sorted(by: { $0.key < $1.key })
     }
 
+    /// Creates a new HTTP request.
     public init(
         size: Int = 0,
         time: Date = Date(),
@@ -47,6 +60,7 @@ public struct OwlHTTPRequest: Sendable, Equatable {
         self.formDataFields = formDataFields
     }
 
+    /// Returns a copy of the request with the specified properties replaced.
     public func copy(
         size: Int? = nil,
         time: Date? = nil,
@@ -73,6 +87,7 @@ public struct OwlHTTPRequest: Sendable, Equatable {
         )
     }
 
+    /// Returns true if the request is equal to the specified request.
     public static func == (lhs: OwlHTTPRequest, rhs: OwlHTTPRequest) -> Bool {
         lhs.size == rhs.size &&
             lhs.time == rhs.time &&

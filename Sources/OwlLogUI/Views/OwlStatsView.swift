@@ -8,55 +8,68 @@
 import OwlLog
 import SwiftUI
 
+/// View responsible for displaying statistics derived from captured HTTP calls.
 public struct OwlStatsView: View {
+    /// Service that provides the logged calls and computed statistics.
     @ObservedObject var service: OwlService
 
     public init(service: OwlService) {
         self.service = service
     }
 
+    /// Root container that decides whether to show the statistics content or an empty state when no network calls are recorded.
     public var body: some View {
-        content
-            .navigationTitle("Statistics")
+        Group {
+            if service.calls.isEmpty {
+                emptyStateView
+            } else {
+                content
+            }
+        }
+        .navigationTitle("Statistics")
     }
 }
 
 private extension OwlStatsView {
-    // MARK: - Content
+    /// Sorts distribution data by key to ensure consistent display order.
+    func distributionData(data: [String: Int]) -> [(key: String, value: Int)] {
+        data.sorted(by: { $0.key < $1.key })
+    }
 
+    /// Returns the proportional bar width based on the value and total calls.
+    func getWidth(value: Int, geo: GeometryProxy) -> CGFloat {
+        geo.size.width * CGFloat(value) / CGFloat(max(1, service.calls.count))
+    }
+}
+
+private extension OwlStatsView {
+    /// Main scrollable statistics content including overview, distributions, and slowest endpoint information.
     @ViewBuilder
-    private var content: some View {
-        let calls = service.calls
+    var content: some View {
+        ScrollView {
+            VStack(alignment: .leading, spacing: 24) {
+                let stats = service.stats
 
-        if calls.isEmpty {
-            emptyStateView
-        } else {
-            ScrollView {
-                VStack(alignment: .leading, spacing: 24) {
-                    let stats = service.stats
+                overviewSection(stats)
 
-                    overviewSection(stats)
+                distributionSection(
+                    title: "Status Code Distribution",
+                    data: stats.statusCodeDistribution
+                )
 
-                    distributionSection(
-                        title: "Status Code Distribution",
-                        data: stats.statusCodeDistribution
-                    )
+                distributionSection(
+                    title: "Requests by Method",
+                    data: stats.methodDistribution
+                )
 
-                    distributionSection(
-                        title: "Requests by Method",
-                        data: stats.methodDistribution
-                    )
-
-                    slowestSection(stats)
-                }
-                .padding()
+                slowestSection(stats)
             }
+            .padding()
         }
     }
 
-    // MARK: - Overview Section
-
-    private func overviewSection(_ stats: OwlStats) -> some View {
+    /// Displays the main overview statistics such as total calls, success rate, error rate, and average response time.
+    func overviewSection(_ stats: OwlStats) -> some View {
         VStack(alignment: .leading, spacing: 12) {
             Text("Overview")
                 .font(.headline)
@@ -70,9 +83,8 @@ private extension OwlStatsView {
         }
     }
 
-    // MARK: - Stat Card
-
-    private func statCard(_ title: String, _ value: String) -> some View {
+    /// Card-style view used to present a single statistic value and label.
+    func statCard(_ title: String, _ value: String) -> some View {
         VStack {
             Text(value)
                 .font(.title2)
@@ -87,14 +99,13 @@ private extension OwlStatsView {
         .cornerRadius(10)
     }
 
-    // MARK: - Distribution Section
-
-    private func distributionSection(title: String, data: [String: Int]) -> some View {
+    /// Displays a distribution chart for statistical data such as status codes or HTTP methods.
+    func distributionSection(title: String, data: [String: Int]) -> some View {
         VStack(alignment: .leading, spacing: 8) {
             Text(title)
                 .font(.headline)
 
-            ForEach(data.sorted(by: { $0.key < $1.key }), id: \.key) { key, value in
+            ForEach(distributionData(data: data), id: \.key) { key, value in
                 HStack {
                     Text(key)
                         .frame(width: 60, alignment: .leading)
@@ -103,7 +114,7 @@ private extension OwlStatsView {
                         Rectangle()
                             .fill(Color.blue.opacity(0.5))
                             .frame(
-                                width: geo.size.width * CGFloat(value) / CGFloat(max(1, service.calls.count)),
+                                width: getWidth(value: value, geo: geo),
                                 height: 20
                             )
                     }
@@ -116,12 +127,10 @@ private extension OwlStatsView {
         }
     }
 
-    // MARK: - Slowest Section
-
-    private func slowestSection(_ stats: OwlStats) -> some View {
+    /// Displays the list of the five slowest endpoints based on response duration.
+    func slowestSection(_ stats: OwlStats) -> some View {
         VStack(alignment: .leading, spacing: 8) {
-            Text("Top 5 Slowest Endpoints")
-                .font(.headline)
+            Text("Top 5 Slowest Endpoints").font(.headline)
 
             ForEach(stats.slowestEndpoints, id: \.id) { call in
                 HStack {
@@ -147,9 +156,8 @@ private extension OwlStatsView {
         }
     }
 
-    // MARK: - Empty State View
-
-    private var emptyStateView: some View {
+    /// Empty state shown when no network calls have been captured yet.
+    var emptyStateView: some View {
         VStack(spacing: 16) {
             Image(systemName: "chart.bar")
                 .font(.system(size: 48, weight: .regular))

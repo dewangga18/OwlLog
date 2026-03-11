@@ -7,17 +7,25 @@
 
 import Foundation
 
+/// Represents an HTTP response.
 public struct OwlHTTPResponse: Sendable, Equatable {
+    /// The status of the response.
     public let status: Int?
+    /// The size of the response.
     public let size: Int
+    /// The time when the response was created.
     public let time: Date
+    /// The body of the response.
     public let body: Data?
+    /// The headers of the response.
     public let headers: [String: String]
 
+    /// Returns the headers of the response sorted by key.
     public var sortedHeaders: [(key: String, value: String)] {
         headers.sorted(by: { $0.key < $1.key })
     }
 
+    /// Creates a new HTTP response.
     public init(
         status: Int? = 0,
         size: Int = 0,
@@ -32,6 +40,7 @@ public struct OwlHTTPResponse: Sendable, Equatable {
         self.headers = headers
     }
 
+    /// Returns a copy of the response with the specified properties replaced.
     public func copy(
         status: Int? = nil,
         size: Int? = nil,

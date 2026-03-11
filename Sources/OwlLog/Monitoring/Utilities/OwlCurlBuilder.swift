@@ -7,7 +7,9 @@
 
 import Foundation
 
+/// A utility for building cURL commands.
 public enum OwlCurlBuilder {
+    /// Generates a cURL command from a URL request.
     public static func generate(from request: URLRequest) -> String {
         var components: [String] = []
 

@@ -8,9 +8,15 @@
 import OwlLog
 import SwiftUI
 
+/// Header view displaying a summary of the HTTP call with quick actions.
 public struct OwlSummaryHeaderView: View {
+    /// HTTP call used to populate the summary information.
     let call: OwlHTTPCall
+
+    /// Optional action to replay the request.
     let onReplay: (() -> Void)?
+
+    /// Indicates whether the replay action is currently in progress.
     let isReplaying: Bool
 
     public init(
@@ -23,17 +29,10 @@ public struct OwlSummaryHeaderView: View {
         self.isReplaying = isReplaying
     }
 
+    /// Layout displaying the call summary and quick actions.
     public var body: some View {
         HStack {
-            VStack(alignment: .leading) {
-                Text("[\(call.method) • \(statusText(statusCode))]")
-                    .font(.system(size: 14, weight: .semibold))
-                    .foregroundColor(statusColor(statusCode))
-
-                Text(call.endpoint)
-                    .font(.system(size: 14, weight: .medium))
-                    .lineLimit(1)
-            }
+            contentSection
 
             Spacer()
 
@@ -45,30 +44,44 @@ public struct OwlSummaryHeaderView: View {
     }
 }
 
-// MARK: - Computed Properties & Functions
-
 private extension OwlSummaryHeaderView {
+    /// Extracted status code from the HTTP response.
     var statusCode: Int {
         call.response?.status ?? -1
     }
 
+    /// Returns display text for a given status code.
     func statusText(_ code: Int) -> String {
         code == -1 ? "ERROR" : "\(code)"
     }
 
+    /// Returns the display color associated with a status code.
     func statusColor(_ code: Int) -> Color {
         switch code {
-        case 200..<300: return .green
-        case 300..<400: return .orange
-        case 400...: return .red
-        default: return .red
+            case 200..<300: return .green
+            case 300..<400: return .orange
+            case 400...: return .red
+            default: return .red
         }
     }
 }
 
-// MARK: - Computed Views
-
 private extension OwlSummaryHeaderView {
+    /// Displays the HTTP method, status code, and endpoint.
+    var contentSection: some View {
+        VStack(alignment: .leading) {
+            Text("[\(call.method) • \(statusText(statusCode))]")
+                .font(.system(size: 14, weight: .semibold))
+                .foregroundColor(statusColor(statusCode))
+
+            Text(call.endpoint)
+                .font(.system(size: 14, weight: .medium))
+                .lineLimit(1)
+        }
+    }
+
+    /// Provides quick actions such as copying the URL or replaying the request.
+    @ViewBuilder
     var quickActions: some View {
         HStack(spacing: 12) {
             Button {

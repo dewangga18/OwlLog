@@ -7,7 +7,9 @@
 
 import Foundation
 
+/// A utility for formatting JSON.
 public enum OwlJSONFormatter {
+    /// Returns a pretty-printed JSON string from data.
     public static func prettyPrinted(from data: Data) -> String {
         do {
             let object = try JSONSerialization.jsonObject(with: data)

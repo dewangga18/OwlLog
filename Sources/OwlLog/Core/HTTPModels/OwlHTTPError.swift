@@ -7,20 +7,32 @@
 
 import Foundation
 
+/// The type of network error.
 public enum OwlNetworkErrorType {
+    /// The device is offline.
     case offline
+    /// The request timed out.
     case timeout
+    /// The request was cancelled.
     case cancelled
+    /// The DNS lookup failed.
     case dnsFailure
+    /// The URL is invalid.
     case badURL
+    /// The error is unknown.
     case unknown
 }
 
+/// Represents an HTTP error.
 public struct OwlHTTPError: Sendable, Equatable {
+    /// The error.
     public let error: any Error & Sendable
+    /// The stack trace of the error.
     public let stackTrace: String?
+    /// The code of the error.
     public let code: Int?
 
+    /// Creates a new HTTP error.
     public init(
         error: any Error,
         stackTrace: String? = nil,
@@ -31,6 +43,7 @@ public struct OwlHTTPError: Sendable, Equatable {
         self.code = code
     }
 
+    /// The resolved code of the error.
     public var resolvedCode: Int? {
         if let code {
             return code
@@ -39,6 +52,7 @@ public struct OwlHTTPError: Sendable, Equatable {
         return (error as NSError).code
     }
 
+    /// The type of network error.
     public var networkType: OwlNetworkErrorType {
         guard let urlError = error as? URLError else {
             return .unknown
@@ -78,10 +92,12 @@ public struct OwlHTTPError: Sendable, Equatable {
         }
     }
 
+    /// The description of the error.
     public var description: String {
         error.localizedDescription
     }
 
+    /// Returns a copy of the error with the specified properties replaced.
     public func copy(
         error: (any Error)? = nil,
         stackTrace: String? = nil,
@@ -94,6 +110,7 @@ public struct OwlHTTPError: Sendable, Equatable {
         )
     }
 
+    /// Returns true if the error is equal to the specified error.
     public static func == (lhs: OwlHTTPError, rhs: OwlHTTPError) -> Bool {
         lhs.error.localizedDescription == rhs.error.localizedDescription &&
             lhs.stackTrace == rhs.stackTrace &&

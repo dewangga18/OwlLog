@@ -4,18 +4,22 @@ import Foundation
 import OwlLog
 import UIKit
 
+/// The session for ActivityKit.
 @available(iOS 16.2, *)
-public final class OwlActivityKitSession {
+@MainActor public final class OwlActivityKitSession {
+    /// The shared instance of the session.
     public static let shared = OwlActivityKitSession()
 
+    /// The activity for ActivityKit.
     private var activity: Activity<OwlLiveActivityAttributes>?
+    /// Whether the session is active.
     private var isActive = false
+    /// The last count of calls.
     private var lastCallsCount: Int = 0
+    /// The task for monitoring the session.
     private var monitorTask: Task<Void, Never>?
 
-    private init() {}
-
-    @MainActor
+    /// Starts the session.
     public func start() {
         guard ActivityAuthorizationInfo().areActivitiesEnabled else { return }
         guard !isActive else { return }
@@ -27,7 +31,7 @@ public final class OwlActivityKitSession {
         startMonitoring()
     }
 
-    @MainActor
+    /// Requests a new activity.
     private func requestNewActivity() {
         guard activity == nil else { return }
 
@@ -50,7 +54,7 @@ public final class OwlActivityKitSession {
         )
     }
 
-    @MainActor
+    /// Starts monitoring the session.
     private func startMonitoring() {
         monitorTask?.cancel()
 
@@ -78,6 +82,7 @@ public final class OwlActivityKitSession {
         }
     }
 
+    /// Stops the session.
     public func stop() {
         isActive = false
         monitorTask?.cancel()
@@ -85,20 +90,13 @@ public final class OwlActivityKitSession {
 
         guard let activity else { return }
         self.activity = nil
-
-        let group = DispatchGroup()
-        group.enter()
-
         Task {
             await activity.end(dismissalPolicy: .immediate)
-            group.leave()
         }
-
-        _ = group.wait(timeout: .now() + 3)
     }
 
+    /// Updates the activity if needed.
     @available(iOS 16.2, *)
-    @MainActor
     public func updateIfNeeded(calls: [OwlHTTPCall]) {
         guard isActive, let activity else { return }
         let count = calls.count
@@ -123,8 +121,10 @@ public final class OwlActivityKitSession {
     }
 }
 
+/// The attributes for ActivityKit.
 @available(iOS 16.2, *)
 public struct OwlLiveActivityAttributes: ActivityAttributes, Sendable {
+    /// The content state for ActivityKit.
     public struct ContentState: Codable, Hashable, Sendable {
         public var title: String
         public var subtitle: String
@@ -134,13 +134,13 @@ public struct OwlLiveActivityAttributes: ActivityAttributes, Sendable {
     public init() {}
 }
 
+/// The cleanup for ActivityKit.
 @available(iOS 16.2, *)
 public enum OwlLiveActivityCleanup {
-    public static func dismissExisting() {
-        Task { @MainActor in
-            for activity in Activity<OwlLiveActivityAttributes>.activities {
-                await activity.end(dismissalPolicy: .immediate)
-            }
+    /// Dismisses all existing activities.
+    public static func dismissExisting() async {
+        for activity in Activity<OwlLiveActivityAttributes>.activities {
+            await activity.end(dismissalPolicy: .immediate)
         }
     }
 }

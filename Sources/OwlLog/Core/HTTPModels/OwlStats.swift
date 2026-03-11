@@ -7,15 +7,24 @@
 
 import Foundation
 
+/// Represents statistics about HTTP calls.
 public struct OwlStats: Sendable {
+    /// The total number of calls.
     public let totalCalls: Int
+    /// The success rate of the calls.
     public let successRate: Double
+    /// The error rate of the calls.
     public let errorRate: Double
+    /// The average response time of the calls.
     public let avgResponseTime: Double
+    /// The distribution of status codes.
     public let statusCodeDistribution: [String: Int]
+    /// The distribution of methods.
     public let methodDistribution: [String: Int]
+    /// The slowest endpoints.
     public let slowestEndpoints: [OwlHTTPCall]
 
+    /// Returns a new instance with zero values.
     public static var zero: OwlStats {
         OwlStats(
             totalCalls: 0,

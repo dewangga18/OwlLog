@@ -7,8 +7,12 @@
 
 import SwiftUI
 
+/// A reusable row view used to display a key–value pair such as HTTP headers, metadata, or request information.
 public struct OwlRowView: View {
+    /// Title or key displayed in the row.
     public let title: String
+
+    /// Value associated with the title.
     public let value: String
 
     public init(title: String, value: String) {
@@ -16,6 +20,7 @@ public struct OwlRowView: View {
         self.value = value
     }
 
+    /// Layout displaying the title and value in a vertical stack with selectable text for easier copying.
     public var body: some View {
         VStack(alignment: .leading, spacing: 4) {
             Text("\(title):")

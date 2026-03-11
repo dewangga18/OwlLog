@@ -7,19 +7,20 @@
 
 import Foundation
 
+/// A URL protocol that logs all HTTP requests and responses.
 public final class OwlURLProtocol: URLProtocol {
     private var dataTask: URLSessionDataTask?
 
+    /// Whether to log HTTP requests and responses to the console.
     public static var isConsoleLogEnabled: Bool = true
 
-    public static func setup(
-        in configuration: URLSessionConfiguration,
-        isConsoleLogEnabled: Bool = true
-    ) {
+    /// Sets up the URL protocol to log all HTTP requests and responses.
+    public static func setup(in config: URLSessionConfiguration, isConsoleLogEnabled: Bool = true) {
         self.isConsoleLogEnabled = isConsoleLogEnabled
-        configuration.protocolClasses = [OwlURLProtocol.self] + (configuration.protocolClasses ?? [])
+        config.protocolClasses = [OwlURLProtocol.self] + (config.protocolClasses ?? [])
     }
 
+    /// Returns true if the URL protocol can handle the specified request.
     override public class func canInit(with request: URLRequest) -> Bool {
         if URLProtocol.property(forKey: "OwlHandled", in: request) != nil {
             return false
@@ -27,20 +28,23 @@ public final class OwlURLProtocol: URLProtocol {
         return true
     }
 
+    /// Returns the canonical request for the specified request.
     override public class func canonicalRequest(for request: URLRequest) -> URLRequest {
         request
     }
 
+    /// Starts loading the specified request.
     override public func startLoading() {
         guard let client = client else { return }
 
-        guard let mutableRequest = (request as NSURLRequest).mutableCopy() as? NSMutableURLRequest else {
+        guard let mutableReq = (request as NSURLRequest).mutableCopy() as? NSMutableURLRequest else {
             return
         }
 
-        URLProtocol.setProperty(true, forKey: "OwlHandled", in: mutableRequest)
+        // Set the property to true to indicate that the request has been handled.
+        URLProtocol.setProperty(true, forKey: "OwlHandled", in: mutableReq)
 
-        let newRequest = mutableRequest as URLRequest
+        let newRequest = mutableReq as URLRequest
 
         let id = UUID().uuidString
         let startTime = Date()
@@ -68,6 +72,7 @@ public final class OwlURLProtocol: URLProtocol {
             request: requestModel
         )
 
+        // Add the call to the service.
         Task { @MainActor in
             OwlService.shared.addCall(call)
 
@@ -155,6 +160,7 @@ public final class OwlURLProtocol: URLProtocol {
         dataTask?.resume()
     }
 
+    /// Stops loading the specified request.
     override public func stopLoading() {
         dataTask?.cancel()
     }

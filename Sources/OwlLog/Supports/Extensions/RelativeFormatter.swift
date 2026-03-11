@@ -8,6 +8,7 @@
 import Foundation
 
 public extension Date {
+    /// Returns a relative formatted string.
     var owlRelativeFormatted: String {
         let difference = Date().timeIntervalSince(self)
 
@@ -29,12 +30,14 @@ public extension Date {
         }
     }
 
+    /// Returns a formatted time string.
     var owlFormattedTime: String {
         Self.owlTimeFormatter.string(from: self)
     }
 }
 
 private extension Date {
+    /// The time formatter.
     static let owlTimeFormatter: DateFormatter = {
         let formatter = DateFormatter()
         formatter.dateFormat = "HH:mm:ss"
@@ -43,6 +46,7 @@ private extension Date {
         return formatter
     }()
 
+    /// The date and time formatter.
     static let owlDateTimeFormatter: DateFormatter = {
         let formatter = DateFormatter()
         formatter.dateFormat = "MMM dd, HH:mm:ss"

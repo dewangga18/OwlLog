@@ -8,6 +8,7 @@
 import Foundation
 
 extension URL {
+    /// Returns the query parameters of the URL as a dictionary.
     var queryParameters: [String: String] {
         guard let components = URLComponents(url: self, resolvingAgainstBaseURL: false),
               let items = components.queryItems

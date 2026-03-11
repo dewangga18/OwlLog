@@ -8,6 +8,7 @@
 import Foundation
 
 public extension TimeInterval {
+    /// Returns a formatted duration string.
     var owlFormattedDuration: String {
         let safeInterval = max(0, self)
         let milliseconds = Int(safeInterval * 1000)
