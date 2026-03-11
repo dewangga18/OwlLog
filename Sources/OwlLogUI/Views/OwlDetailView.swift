@@ -23,6 +23,8 @@ public struct OwlDetailView: View {
     @State private var replayData: Data?
     /// The error for the replay functionality.
     @State private var replayError: Error?
+    /// The selected tab for detail content.
+    @State private var selectedTab: DetailTab = .headers
 
     public init(call: OwlHTTPCall) {
         self.call = call
@@ -30,7 +32,7 @@ public struct OwlDetailView: View {
 
     public var body: some View {
         tabView
-            .toolbar(content: toolbarItems)
+            .toolbar(content: toolbarCopyCurl)
             .alert("Replay Result", isPresented: $showResultDialog) {
                 Button("Close", role: .cancel) {}
 
@@ -41,7 +43,53 @@ public struct OwlDetailView: View {
     }
 }
 
-// MARK: - Functions
+private extension OwlDetailView {
+
+    /// Tabs available in the detail screen.
+    enum DetailTab: Hashable {
+        case headers
+        case response
+        case error
+    }
+
+    /// Computes tabs that should be shown based on call data.
+    var availableTabs: [DetailTab] {
+        var tabs: [DetailTab] = [.headers]
+        if call.response != nil {
+            tabs.append(.response)
+        }
+        if call.error != nil {
+            tabs.append(.error)
+        }
+        return tabs
+    }
+
+    /// Moves the selected tab by a given offset within the available tab range.
+    func moveTab(by offset: Int) {
+        let tabs = availableTabs
+        guard let index = tabs.firstIndex(of: selectedTab) else {
+            selectedTab = tabs.first ?? .headers
+            return
+        }
+
+        let nextIndex = min(max(index + offset, 0), tabs.count - 1)
+        guard nextIndex != index else { return }
+        selectedTab = tabs[nextIndex]
+    }
+
+    /// Handles horizontal swipe gestures to switch between tabs.
+    func handleSwipe(_ value: DragGesture.Value) {
+        let horizontal = value.translation.width
+        let vertical = value.translation.height
+        guard abs(horizontal) > abs(vertical) else { return }
+
+        if horizontal <= -40 {
+            moveTab(by: 1)
+        } else if horizontal >= 40 {
+            moveTab(by: -1)
+        }
+    }
+}
 
 private extension OwlDetailView {
     /// Handles the copy curl functionality.
@@ -82,8 +130,6 @@ private extension OwlDetailView {
     }
 }
 
-// MARK: - Views
-
 private extension OwlDetailView {
     /// The buttons for the replay alert.
     @ViewBuilder var replayAlertButtons: some View {
@@ -99,7 +145,7 @@ private extension OwlDetailView {
     }
 
     /// The toolbar items for the detail view.
-    func toolbarItems() -> some ToolbarContent {
+    func toolbarCopyCurl() -> some ToolbarContent {
         ToolbarItem(placement: .owlTrailing) {
             Button(action: handleCopyCurl) {
                 HStack {
@@ -115,8 +161,8 @@ private extension OwlDetailView {
     var tabView: some View {
         #if swift(>=6.0)
         if #available(iOS 18.0, *) {
-            TabView {
-                Tab("Headers", systemImage: "network") {
+            TabView(selection: $selectedTab) {
+                Tab("Headers", systemImage: "network", value: DetailTab.headers) {
                     OwlHeadersView(
                         call: call,
                         onReplay: OwlService.shared.urlSession != nil ? handleReplay : nil,
@@ -125,19 +171,23 @@ private extension OwlDetailView {
                 }
 
                 if call.response != nil {
-                    Tab("Response", systemImage: "doc.text.image") {
+                    Tab("Response", systemImage: "doc.text.image", value: DetailTab.response) {
                         OwlResponseView(call: call)
                     }
                 }
 
                 if call.error != nil {
-                    Tab("Error", systemImage: "xmark.octagon") {
+                    Tab("Error", systemImage: "xmark.octagon", value: DetailTab.error) {
                         OwlErrorView(call: call)
                     }
                 }
             }
             .navigationTitle("Call Details")
             .owlNavigationBarTitleDisplayModeInline()
+            .simultaneousGesture(
+                DragGesture(minimumDistance: 20)
+                    .onEnded(handleSwipe)
+            )
             .if(true) { view in
                 if #available(iOS 26.0, *) {
                     view.tabBarMinimizeBehavior(.onScrollDown)
@@ -156,18 +206,20 @@ private extension OwlDetailView {
     /// The fallback tab view for the detail view.
     @ViewBuilder
     var fallbackTabView: some View {
-        TabView {
+        TabView(selection: $selectedTab) {
             OwlHeadersView(
                 call: call,
                 onReplay: OwlService.shared.urlSession != nil ? handleReplay : nil,
                 isReplaying: isReplaying
             )
+            .tag(DetailTab.headers)
             .tabItem {
                 Label("Headers", systemImage: "network")
             }
 
             if call.response != nil {
                 OwlResponseView(call: call)
+                    .tag(DetailTab.response)
                     .tabItem {
                         Label("Response", systemImage: "doc.text.image")
                     }
@@ -175,6 +227,7 @@ private extension OwlDetailView {
 
             if call.error != nil {
                 OwlErrorView(call: call)
+                    .tag(DetailTab.error)
                     .tabItem {
                         Label("Error", systemImage: "xmark.octagon")
                     }
@@ -182,6 +235,10 @@ private extension OwlDetailView {
         }
         .navigationTitle("Call Details")
         .owlNavigationBarTitleDisplayModeInline()
+        .simultaneousGesture(
+            DragGesture(minimumDistance: 20)
+                .onEnded(handleSwipe)
+        )
     }
 
     /// The replay message for the detail view.
