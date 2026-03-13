@@ -41,10 +41,10 @@ public struct OwlSummaryHeaderView: View {
 
             quickActions
         }
+        .toast("🦉 URL copied!", isShowing: $showCopiedToast)
         .padding(.leading, 4)
         .padding(.trailing, 8)
         .padding(.vertical, 12)
-        .toast("🦉 URL copied!", isShowing: $showCopiedToast)
     }
 }
 
