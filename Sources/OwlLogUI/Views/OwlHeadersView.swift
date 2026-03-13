@@ -34,6 +34,9 @@ public struct OwlHeadersView: View {
     /// Controls the expanded state of the "Data File" disclosure section.
     @State var isOpenDataFile = true
 
+    /// Controls visibility of the copy URL toast.
+    @State private var showCopiedToast = false
+
     public init(
         call: OwlHTTPCall,
         onReplay: (() -> Void)? = nil,
@@ -51,7 +54,8 @@ public struct OwlHeadersView: View {
                 OwlSummaryHeaderView(
                     call: call,
                     onReplay: onReplay,
-                    isReplaying: isReplaying
+                    isReplaying: isReplaying,
+                    showCopiedToast: $showCopiedToast
                 )
 
                 generalSection
@@ -63,6 +67,7 @@ public struct OwlHeadersView: View {
             .padding(.horizontal, 16)
             .padding(.bottom, 16)
         }
+        .toast("🦉 URL copied!", isShowing: $showCopiedToast)
     }
 }
 

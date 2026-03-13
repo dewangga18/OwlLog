@@ -20,16 +20,18 @@ public struct OwlSummaryHeaderView: View {
     let isReplaying: Bool
 
     /// Controls visibility of the copy URL toast.
-    @State private var showCopiedToast = false
+    @Binding var showCopiedToast:  Bool
 
     public init(
         call: OwlHTTPCall,
         onReplay: (() -> Void)? = nil,
-        isReplaying: Bool = false
+        isReplaying: Bool = false,
+        showCopiedToast: Binding<Bool>
     ) {
         self.call = call
         self.onReplay = onReplay
         self.isReplaying = isReplaying
+        self._showCopiedToast = showCopiedToast
     }
 
     /// Layout displaying the call summary and quick actions.
@@ -41,7 +43,6 @@ public struct OwlSummaryHeaderView: View {
 
             quickActions
         }
-        .toast("🦉 URL copied!", isShowing: $showCopiedToast)
         .padding(.leading, 4)
         .padding(.trailing, 8)
         .padding(.vertical, 12)
