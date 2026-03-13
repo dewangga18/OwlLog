@@ -15,9 +15,16 @@ struct OwlLogActivityWidget: Widget {
                     .font(.headline)
                 Text(context.state.subtitle)
                     .font(.subheadline)
-                Text("Calls: \(context.state.callsCount)")
-                    .font(.caption)
-                    .foregroundStyle(.secondary)
+                HStack(spacing: 12) {
+                    Label("\(context.state.callsCount) calls", systemImage: "network")
+                        .font(.caption)
+                        .foregroundStyle(.secondary)
+                    if context.state.errorsCount > 0 {
+                        Label("\(context.state.errorsCount) errors", systemImage: "exclamationmark.triangle.fill")
+                            .font(.caption)
+                            .foregroundStyle(.red)
+                    }
+                }
             }
             .padding()
             .widgetURL(URL(string: "owllog://open-inspector")) // your deep link
@@ -27,18 +34,35 @@ struct OwlLogActivityWidget: Widget {
                     VStack(spacing: 4) {
                         Text(context.state.subtitle)
                             .font(.subheadline)
-                        Text("Calls: \(context.state.callsCount)")
-                            .font(.caption)
-                            .foregroundStyle(.secondary)
+                        HStack(spacing: 12) {
+                            Label("\(context.state.callsCount)", systemImage: "network")
+                                .font(.caption)
+                                .foregroundStyle(.secondary)
+                            if context.state.errorsCount > 0 {
+                                Label("\(context.state.errorsCount)", systemImage: "exclamationmark.triangle.fill")
+                                    .font(.caption)
+                                    .foregroundStyle(.red)
+                            }
+                        }
                     }
                     .widgetURL(URL(string: "owllog://open-inspector"))
                 }
             } compactLeading: {
                 Text("🦉OwlLog")
             } compactTrailing: {
-                Text("\(context.state.callsCount)")
+                if context.state.errorsCount > 0 {
+                    Label("\(context.state.errorsCount)", systemImage: "exclamationmark.triangle.fill")
+                        .foregroundStyle(.red)
+                } else {
+                    Text("\(context.state.callsCount)")
+                }
             } minimal: {
-                Text("\(context.state.callsCount)")
+                if context.state.errorsCount > 0 {
+                    Image(systemName: "exclamationmark.triangle.fill")
+                        .foregroundStyle(.red)
+                } else {
+                    Text("\(context.state.callsCount)")
+                }
             }
         }
     }

@@ -19,14 +19,19 @@ public struct OwlSummaryHeaderView: View {
     /// Indicates whether the replay action is currently in progress.
     let isReplaying: Bool
 
+    /// Controls visibility of the copy URL toast.
+    @Binding var showCopiedToast:  Bool
+
     public init(
         call: OwlHTTPCall,
         onReplay: (() -> Void)? = nil,
-        isReplaying: Bool = false
+        isReplaying: Bool = false,
+        showCopiedToast: Binding<Bool>
     ) {
         self.call = call
         self.onReplay = onReplay
         self.isReplaying = isReplaying
+        self._showCopiedToast = showCopiedToast
     }
 
     /// Layout displaying the call summary and quick actions.
@@ -86,6 +91,7 @@ private extension OwlSummaryHeaderView {
         HStack(spacing: 12) {
             Button {
                 OwlClipboard.copy(call.uri)
+                showCopiedToast = true
             } label: {
                 Label("URL", systemImage: "doc.on.doc")
             }
