@@ -19,6 +19,9 @@ public struct OwlResponseView: View {
     /// Flag to ensure the formatting task runs only once.
     @State private var freshTask = true
 
+    /// Controls visibility of the copy toast.
+    @State private var showCopiedToast = false
+
     public init(call: OwlHTTPCall) {
         self.call = call
     }
@@ -27,6 +30,7 @@ public struct OwlResponseView: View {
     public var body: some View {
         contentView
             .onAppear(perform: prepareContent)
+            .toast("🦉 Response copied!", isShowing: $showCopiedToast)
     }
 }
 
@@ -54,6 +58,7 @@ private extension OwlResponseView {
     /// Copies the raw response body content to the clipboard.
     func handleCopy() {
         OwlClipboard.copy(OwlContentFormatter.convertToString(body))
+        showCopiedToast = true
     }
 }
 

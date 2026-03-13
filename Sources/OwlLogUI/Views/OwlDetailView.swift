@@ -25,6 +25,9 @@ public struct OwlDetailView: View {
     @State private var replayError: Error?
     /// The selected tab for detail content.
     @State private var selectedTab: DetailTab = .headers
+    /// Controls visibility of the copied toast.
+    @State private var showCopiedToastResponse = false
+    @State private var showCopiedToastCurl = false
 
     public init(call: OwlHTTPCall) {
         self.call = call
@@ -40,6 +43,8 @@ public struct OwlDetailView: View {
             } message: {
                 replayMessage
             }
+            .toast("🦉 cURL Copied!", isShowing: $showCopiedToastCurl)
+            .toast("🦉 Response Copied!", isShowing: $showCopiedToastResponse)
     }
 }
 
@@ -95,6 +100,7 @@ private extension OwlDetailView {
     /// Handles the copy curl functionality.
     func handleCopyCurl() {
         OwlClipboard.copy(call.request?.curl ?? "")
+        showCopiedToastCurl = true
     }
 
     /// Handles the replay functionality.
@@ -139,6 +145,7 @@ private extension OwlDetailView {
                    let string = String(data: data, encoding: .utf8)
                 {
                     OwlClipboard.copy(string)
+                    showCopiedToastResponse = true
                 }
             }
         }

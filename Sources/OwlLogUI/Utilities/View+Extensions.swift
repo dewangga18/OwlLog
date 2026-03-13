@@ -20,5 +20,10 @@ extension View {
             self
         }
     }
+
+    /// Displays a toast message with a customizable duration.
+    func toast(_ message: LocalizedStringKey, isShowing: Binding<Bool>, duration: TimeInterval = 3) -> some View {
+        self.modifier(ToastModifier(message: message, isShowing: isShowing, duration: duration))
+    }
 }
 

@@ -16,6 +16,8 @@ import UIKit
     private var isActive = false
     /// The last count of calls.
     private var lastCallsCount: Int = 0
+    /// The last count of errors.
+    private var lastErrorsCount: Int = 0
     /// The task for monitoring the session.
     private var monitorTask: Task<Void, Never>?
 
@@ -26,6 +28,7 @@ import UIKit
 
         isActive = true
         lastCallsCount = OwlService.shared.calls.count
+        lastErrorsCount = OwlService.shared.calls.filter { $0.error != nil || ($0.response?.status ?? 0) >= 400 }.count
 
         requestNewActivity()
         startMonitoring()
@@ -39,7 +42,8 @@ import UIKit
         let contentState = OwlLiveActivityAttributes.ContentState(
             title: "OwlLog",
             subtitle: "Waiting for traffic",
-            callsCount: lastCallsCount
+            callsCount: lastCallsCount,
+            errorsCount: lastErrorsCount
         )
 
         let content = ActivityContent(
@@ -100,14 +104,17 @@ import UIKit
     public func updateIfNeeded(calls: [OwlHTTPCall]) {
         guard isActive, let activity else { return }
         let count = calls.count
-        guard count != lastCallsCount else { return }
+        let errorsCount = calls.filter { $0.error != nil || ($0.response?.status ?? 0) >= 400 }.count
+        guard count != lastCallsCount || errorsCount != lastErrorsCount else { return }
         lastCallsCount = count
+        lastErrorsCount = errorsCount
 
         let latest = calls.last
         let contentState = OwlLiveActivityAttributes.ContentState(
             title: "OwlLog",
             subtitle: latest.map { "\($0.method) \($0.endpoint)" } ?? "New network activity",
-            callsCount: count
+            callsCount: count,
+            errorsCount: errorsCount
         )
 
         let content = ActivityContent(
@@ -129,6 +136,7 @@ public struct OwlLiveActivityAttributes: ActivityAttributes, Sendable {
         public var title: String
         public var subtitle: String
         public var callsCount: Int
+        public var errorsCount: Int
     }
 
     public init() {}
@@ -153,6 +161,7 @@ public final class OwlActivityKitSession {
     public func start() {}
     public func stop() {}
     public func updateIfNeeded(calls: [OwlHTTPCall]) {}
+    public func updateIfNeeded(calls: [OwlHTTPCall], errorsCount: Int) {}
 }
 
 #endif

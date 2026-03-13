@@ -2,6 +2,12 @@
 
 All notable changes to the OwlLog project will be documented in this file.
 
+## [1.0.7] - 2026-03-13
+
+### Added
+- **Live Activity error count** — Live Activity state now tracks `errorsCount` and surfaces it in widget/Live Activity UI.
+- **Copy toasts** — Added toast feedback for URL, cURL, and response copy actions.
+
 ## [1.0.6] - 2026-03-11
 
 ### Added
