@@ -59,7 +59,7 @@ private extension OwlDetailView {
 
     /// Computes tabs that should be shown based on call data.
     var availableTabs: [DetailTab] {
-        var tabs: [DetailTab] = [.headers]
+        var tabs: [DetailTab] = [.request]
         if call.response != nil {
             tabs.append(.response)
         }
@@ -169,7 +169,7 @@ private extension OwlDetailView {
         #if swift(>=6.0)
         if #available(iOS 18.0, *) {
             TabView(selection: $selectedTab) {
-                Tab("Request", systemImage: "network", value: DetailTab.headers) {
+                Tab("Request", systemImage: "network", value: DetailTab.request) {
                     OwlRequestView(
                         call: call,
                         onReplay: OwlService.shared.urlSession != nil ? handleReplay : nil,
@@ -219,7 +219,7 @@ private extension OwlDetailView {
                 onReplay: OwlService.shared.urlSession != nil ? handleReplay : nil,
                 isReplaying: isReplaying
             )
-            .tag(DetailTab.headers)
+            .tag(DetailTab.request)
             .tabItem {
                 Label("Request", systemImage: "network")
             }
