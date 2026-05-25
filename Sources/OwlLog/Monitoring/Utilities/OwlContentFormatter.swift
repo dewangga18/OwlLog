@@ -25,6 +25,74 @@ public enum OwlContentFormatter {
         }
         return String(describing: body)
     }
+    
+    /// Extracts key-value parameters from structured request body data.
+    /// Pass `headers` so content type detection uses Content-Type header instead of body sniffing.
+    public static func extractParameters(from body: Data, headers: [String: String]? = nil) -> [(key: String, value: String)] {
+        let contentType = detectContentType(headers: headers, body: body)
+
+        switch contentType {
+        case .json:
+            return extractJSONParameters(from: body) ?? []
+        case .text:
+            return extractFormURLEncodedParameters(from: body) ?? []
+        default:
+            break
+        }
+
+        // Fallback: try both
+        if let jsonParams = extractJSONParameters(from: body), !jsonParams.isEmpty {
+            return jsonParams
+        }
+        if let formParams = extractFormURLEncodedParameters(from: body), !formParams.isEmpty {
+            return formParams
+        }
+        return []
+    }
+
+    /// Parses a JSON object body into displayable top-level key-value pairs.
+    private static func extractJSONParameters(from body: Data) -> [(key: String, value: String)]? {
+        guard let object = try? JSONSerialization.jsonObject(with: body),
+              let dictionary = object as? [String: Any]
+        else {
+            return nil
+        }
+
+        return dictionary
+            .map { key, value in (key: key, value: parameterValue(from: value)) }
+            .sorted { $0.key < $1.key }
+    }
+
+    /// Parses an `application/x-www-form-urlencoded` body into displayable key-value pairs.
+    private static func extractFormURLEncodedParameters(from body: Data) -> [(key: String, value: String)]? {
+        guard let bodyString = String(data: body, encoding: .utf8),
+              !bodyString.isEmpty,
+              bodyString.contains("=")
+        else {
+            return nil
+        }
+
+        var components = URLComponents()
+        components.percentEncodedQuery = bodyString
+
+        return components.queryItems?
+            .map { item in (key: item.name, value: item.value ?? "") }
+            .sorted { $0.key < $1.key }
+    }
+
+    /// Converts a parameter value into a concise display string.
+    private static func parameterValue(from value: Any) -> String {
+        if let string = value as? String { return string }
+
+        if JSONSerialization.isValidJSONObject(value),
+           let data = try? JSONSerialization.data(withJSONObject: value, options: [.sortedKeys]),
+           let string = String(data: data, encoding: .utf8)
+        {
+            return string
+        }
+
+        return String(describing: value)
+    }
 
     /// Detects the content type of a body.
     public static func detectContentType(headers: [String: String]?, body: Any?) -> OwlContentType {
@@ -164,5 +232,21 @@ public enum OwlContentFormatter {
     /// Formats an HTML object.
     public static func formatHTML(_ html: Any) -> String {
         return formatXML(html)
+    }
+
+    /// Formats a [String: String] dictionary as pretty-printed JSON string.
+    public static func formatDictAsJSON(_ dict: [String: String]) -> String {
+        guard let data = try? JSONSerialization.data(
+            withJSONObject: dict,
+            options: [.prettyPrinted, .sortedKeys]
+        ) else {
+            return dict.map { "\($0.key): \($0.value)" }.sorted().joined(separator: "\n")
+        }
+        return String(decoding: data, as: UTF8.self)
+    }
+
+    /// Formats raw body Data as pretty-printed JSON, falls back to plain string.
+    public static func formatBodyAsJSON(_ body: Data) -> String {
+        return OwlContentFormatter.formatJSON(body)
     }
 }

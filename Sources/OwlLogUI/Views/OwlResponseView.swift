@@ -45,20 +45,43 @@ private extension OwlResponseView {
         let headers = call.response?.headers ?? [:]
         let contentType = OwlContentFormatter.detectContentType(headers: headers, body: body)
 
-        switch contentType {
-            case .json:
-                formattedContent = OwlContentFormatter.formatJSON(body)
-            case .xml, .html:
-                formattedContent = OwlContentFormatter.formatXML(body)
-            default:
-                formattedContent = OwlContentFormatter.convertToString(body)
-        }
+        formattedContent = responseText(from: body, contentType: contentType)
     }
 
-    /// Copies the raw response body content to the clipboard.
+    /// Copies the displayed response text content to the clipboard.
     func handleCopy() {
-        OwlClipboard.copy(OwlContentFormatter.convertToString(body))
+        guard let body = call.response?.body else {
+            return
+        }
+
+        let contentType = OwlContentFormatter.detectContentType(
+            headers: call.response?.headers ?? [:],
+            body: body
+        )
+        let text = formattedContent.isEmpty
+            ? responseText(from: body, contentType: contentType)
+            : formattedContent
+
+        guard !text.isEmpty else {
+            return
+        }
+
+        OwlClipboard.copy(text)
         showCopiedToast = true
+    }
+
+    /// Returns the response text in the same format used by the response viewer.
+    func responseText(from body: Any, contentType: OwlContentType) -> String {
+        switch contentType {
+            case .json:
+                return OwlContentFormatter.formatJSON(body)
+            case .xml, .html:
+                return OwlContentFormatter.formatXML(body)
+            case .image:
+                return ""
+            default:
+                return OwlContentFormatter.convertToString(body)
+        }
     }
 }
 
@@ -157,7 +180,7 @@ private extension OwlResponseView {
             Text("Image preview not yet supported")
                 .foregroundColor(.gray)
 
-            Text("Check the Headers tab for image metadata")
+            Text("Check the Request tab for image metadata")
                 .font(.system(size: 12))
                 .foregroundColor(.gray)
         }

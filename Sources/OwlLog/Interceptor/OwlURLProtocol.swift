@@ -44,6 +44,31 @@ public final class OwlURLProtocol: URLProtocol {
         // Set the property to true to indicate that the request has been handled.
         URLProtocol.setProperty(true, forKey: "OwlHandled", in: mutableReq)
 
+        // Read body from httpBodyStream if httpBody is nil.
+        // URLSession uses a stream internally for multipart/encoded bodies — draining
+        // it here and replacing with raw Data keeps the body intact for both logging
+        // and the actual network request.
+        if mutableReq.httpBody == nil, let stream = mutableReq.httpBodyStream {
+            var data = Data()
+            stream.open()
+            let bufferSize = 4096
+            var buffer = [UInt8](repeating: 0, count: bufferSize)
+            while stream.hasBytesAvailable {
+                let bytesRead = stream.read(&buffer, maxLength: bufferSize)
+                if bytesRead > 0 {
+                    data.append(buffer, count: bytesRead)
+                } else {
+                    break
+                }
+            }
+            stream.close()
+            if !data.isEmpty {
+                // Replace the stream with raw Data so URLSession can still send the body
+                // and we can read it for logging / curl generation below.
+                mutableReq.httpBody = data
+            }
+        }
+
         let newRequest = mutableReq as URLRequest
 
         let id = UUID().uuidString
@@ -56,7 +81,7 @@ public final class OwlURLProtocol: URLProtocol {
             body: newRequest.httpBody,
             contentType: newRequest.value(forHTTPHeaderField: "Content-Type"),
             curl: OwlCurlBuilder.generate(from: newRequest),
-            queryParameters: newRequest.url?.queryParameters ?? [:],
+            queryParameters: newRequest.url?.queryParameters ?? [:]
         )
 
         let call = OwlHTTPCall(
