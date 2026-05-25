@@ -26,7 +26,7 @@ public struct OwlResponseView: View {
         self.call = call
     }
 
-    /// Root container view that prepares the response content when the view appears.
+    /// Root container view that prepares the response content  when the view appears.
     public var body: some View {
         contentView
             .onAppear(perform: prepareContent)
@@ -45,25 +45,48 @@ private extension OwlResponseView {
         let headers = call.response?.headers ?? [:]
         let contentType = OwlContentFormatter.detectContentType(headers: headers, body: body)
 
-        switch contentType {
-        case .json:
-            formattedContent = OwlContentFormatter.formatJSON(body)
-        case .xml, .html:
-            formattedContent = OwlContentFormatter.formatXML(body)
-        default:
-            formattedContent = OwlContentFormatter.convertToString(body)
-        }
+        formattedContent = responseText(from: body, contentType: contentType)
     }
 
-    /// Copies the raw response body to the clipboard.
+    /// Copies the displayed response text content to the clipboard.
     func handleCopy() {
-        OwlClipboard.copy(OwlContentFormatter.convertToString(body))
+        guard let body = call.response?.body else {
+            return
+        }
+
+        let contentType = OwlContentFormatter.detectContentType(
+            headers: call.response?.headers ?? [:],
+            body: body
+        )
+        let text = formattedContent.isEmpty
+            ? responseText(from: body, contentType: contentType)
+            : formattedContent
+
+        guard !text.isEmpty else {
+            return
+        }
+
+        OwlClipboard.copy(text)
         showCopiedToast = true
+    }
+
+    /// Returns the response text in the same format used by the response viewer.
+    func responseText(from body: Any, contentType: OwlContentType) -> String {
+        switch contentType {
+            case .json:
+                return OwlContentFormatter.formatJSON(body)
+            case .xml, .html:
+                return OwlContentFormatter.formatXML(body)
+            case .image:
+                return ""
+            default:
+                return OwlContentFormatter.convertToString(body)
+        }
     }
 }
 
 private extension OwlResponseView {
-    /// Main content builder.
+    /// Main content builder that determines whether a response body exists and renders the appropriate UI structure.
     @ViewBuilder
     var contentView: some View {
         if let body = call.response?.body, let headers = call.response?.headers {
@@ -115,14 +138,17 @@ private extension OwlResponseView {
     func buildContent(contentType: OwlContentType) -> some View {
         Group {
             switch contentType {
-            case .json:
-                buildJsonContent()
-            case .xml, .html:
-                buildXmlContent()
-            case .image:
-                buildImageContent()
-            default:
-                buildTextContent()
+                case .json:
+                    buildJsonContent()
+
+                case .xml, .html:
+                    buildXmlContent()
+
+                case .image:
+                    buildImageContent()
+
+                default:
+                    buildTextContent()
             }
         }
         .padding(16)
