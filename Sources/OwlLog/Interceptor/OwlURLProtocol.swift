@@ -41,13 +41,6 @@ public final class OwlURLProtocol: URLProtocol {
             return
         }
 
-        // Drain body stream BEFORE marking as handled and forwarding.
-        // URLSession often delivers body as httpBodyStream instead of httpBody.
-        if let stream = request.httpBodyStream, mutableReq.httpBody == nil {
-            mutableReq.httpBody = Self.drain(stream: stream)
-            mutableReq.httpBodyStream = nil
-        }
-
         // Set the property to true to indicate that the request has been handled.
         URLProtocol.setProperty(true, forKey: "OwlHandled", in: mutableReq)
 
@@ -170,26 +163,5 @@ public final class OwlURLProtocol: URLProtocol {
     /// Stops loading the specified request.
     override public func stopLoading() {
         dataTask?.cancel()
-    }
-}
-
-private extension OwlURLProtocol {
-    /// Reads all bytes from a body stream into Data.
-    static func drain(stream: InputStream) -> Data? {
-        var data = Data()
-        stream.open()
-        defer { stream.close() }
-
-        let bufferSize = 4096
-        let buffer = UnsafeMutablePointer<UInt8>.allocate(capacity: bufferSize)
-        defer { buffer.deallocate() }
-
-        var bytesRead = stream.read(buffer, maxLength: bufferSize)
-        while bytesRead > 0 {
-            data.append(buffer, count: bytesRead)
-            bytesRead = stream.read(buffer, maxLength: bufferSize)
-        }
-
-        return data.isEmpty ? nil : data
     }
 }
