@@ -26,7 +26,7 @@ public struct OwlResponseView: View {
         self.call = call
     }
 
-    /// Root container view that prepares the response content  when the view appears.
+    /// Root container view that prepares the response content when the view appears.
     public var body: some View {
         contentView
             .onAppear(perform: prepareContent)
@@ -46,16 +46,16 @@ private extension OwlResponseView {
         let contentType = OwlContentFormatter.detectContentType(headers: headers, body: body)
 
         switch contentType {
-            case .json:
-                formattedContent = OwlContentFormatter.formatJSON(body)
-            case .xml, .html:
-                formattedContent = OwlContentFormatter.formatXML(body)
-            default:
-                formattedContent = OwlContentFormatter.convertToString(body)
+        case .json:
+            formattedContent = OwlContentFormatter.formatJSON(body)
+        case .xml, .html:
+            formattedContent = OwlContentFormatter.formatXML(body)
+        default:
+            formattedContent = OwlContentFormatter.convertToString(body)
         }
     }
 
-    /// Copies the raw response body content to the clipboard.
+    /// Copies the raw response body to the clipboard.
     func handleCopy() {
         OwlClipboard.copy(OwlContentFormatter.convertToString(body))
         showCopiedToast = true
@@ -63,7 +63,7 @@ private extension OwlResponseView {
 }
 
 private extension OwlResponseView {
-    /// Main content builder that determines whether a response body exists and renders the appropriate UI structure.
+    /// Main content builder.
     @ViewBuilder
     var contentView: some View {
         if let body = call.response?.body, let headers = call.response?.headers {
@@ -115,17 +115,14 @@ private extension OwlResponseView {
     func buildContent(contentType: OwlContentType) -> some View {
         Group {
             switch contentType {
-                case .json:
-                    buildJsonContent()
-
-                case .xml, .html:
-                    buildXmlContent()
-
-                case .image:
-                    buildImageContent()
-
-                default:
-                    buildTextContent()
+            case .json:
+                buildJsonContent()
+            case .xml, .html:
+                buildXmlContent()
+            case .image:
+                buildImageContent()
+            default:
+                buildTextContent()
             }
         }
         .padding(16)
@@ -157,7 +154,7 @@ private extension OwlResponseView {
             Text("Image preview not yet supported")
                 .foregroundColor(.gray)
 
-            Text("Check the Headers tab for image metadata")
+            Text("Check the Request tab for image metadata")
                 .font(.system(size: 12))
                 .foregroundColor(.gray)
         }
