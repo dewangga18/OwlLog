@@ -233,4 +233,20 @@ public enum OwlContentFormatter {
     public static func formatHTML(_ html: Any) -> String {
         return formatXML(html)
     }
+
+    /// Formats a [String: String] dictionary as pretty-printed JSON string.
+    public static func formatDictAsJSON(_ dict: [String: String]) -> String {
+        guard let data = try? JSONSerialization.data(
+            withJSONObject: dict,
+            options: [.prettyPrinted, .sortedKeys]
+        ) else {
+            return dict.map { "\($0.key): \($0.value)" }.sorted().joined(separator: "\n")
+        }
+        return String(decoding: data, as: UTF8.self)
+    }
+
+    /// Formats raw body Data as pretty-printed JSON, falls back to plain string.
+    public static func formatBodyAsJSON(_ body: Data) -> String {
+        return OwlContentFormatter.formatJSON(body)
+    }
 }

@@ -12,7 +12,7 @@ public enum OwlCurlBuilder {
 
     /// Headers that add no value to a manually replayed curl command.
     private static let excludedHeaderNames: Set<String> = [
-        "content-type",         // curl infers this from -d; avoids duplicate with --data
+        "content-type", "Content-Type",
         "content-length",       // curl computes this automatically
         "accept-encoding",      // curl sets its own
         "accept-language",      // iOS locale noise

@@ -32,8 +32,20 @@ public struct OwlRequestView: View {
     /// Controls the expanded state of the "Form Data Files" disclosure section.
     @State var isOpenDataFile = true
 
+    /// Controls the expanded state of the "Query Parameters" disclosure section.
+    @State var isOpenQueryParams = true
+
+    /// Controls the expanded state of the "Body" disclosure section.
+    @State var isOpenBody = true
+
     /// Controls visibility of the copy URL toast.
     @State private var showCopiedToast = false
+
+    /// Controls visibility of the copy query params toast.
+    @State private var showCopiedQueryToast = false
+
+    /// Controls visibility of the copy body toast.
+    @State private var showCopiedBodyToast = false
 
     public init(
         call: OwlHTTPCall,
@@ -56,6 +68,8 @@ public struct OwlRequestView: View {
                 )
 
                 generalSection
+                queryParamsSection
+                bodySection
                 requestHeadersSection
                 responseHeadersSection
                 formDataFieldsSection
@@ -65,6 +79,8 @@ public struct OwlRequestView: View {
             .padding(.bottom, 16)
         }
         .toast("🦉 URL copied!", isShowing: $showCopiedToast)
+        .toast("🦉 Query params copied!", isShowing: $showCopiedQueryToast)
+        .toast("🦉 Body copied!", isShowing: $showCopiedBodyToast)
     }
 }
 
@@ -74,9 +90,6 @@ private extension OwlRequestView {
         DisclosureGroup("General", isExpanded: $isOpenGeneral) {
             VStack(alignment: .leading, spacing: 8) {
                 OwlRowView(title: "Request URL", value: call.uri)
-                queryParameterRows
-                bodyParameterRows
-                rawBodyRow
                 OwlRowView(title: "Request Method", value: call.method)
                 OwlRowView(
                     title: "Status Code",
@@ -88,54 +101,87 @@ private extension OwlRequestView {
         }
     }
 
-    /// Displays query parameters extracted from the request URL.
-    @ViewBuilder var queryParameterRows: some View {
+    /// Displays query parameters as a separate section with formatted JSON and a copy button.
+    @ViewBuilder var queryParamsSection: some View {
         if let queryParams = call.request?.queryParameters, !queryParams.isEmpty {
-            ForEach(queryParams.sorted(by: { $0.key < $1.key }), id: \.key) { key, value in
-                OwlRowView(title: "Query Parameter - \(key)", value: value)
+            let formatted = OwlContentFormatter.formatDictAsJSON(queryParams)
+            DisclosureGroup("Query Parameters", isExpanded: $isOpenQueryParams) {
+                VStack(spacing: 0) {
+                    // Header bar
+                    HStack {
+                        Text("\(queryParams.count) param\(queryParams.count == 1 ? "" : "s")")
+                            .font(.caption2.weight(.bold))
+                            .foregroundStyle(.secondary)
+
+                        Spacer()
+
+                        Button {
+                            OwlClipboard.copy(formatted)
+                            showCopiedQueryToast = true
+                        } label: {
+                            Label("Copy", systemImage: "doc.on.doc")
+                                .font(.subheadline)
+                        }
+                    }
+                    .padding(.horizontal, 12)
+                    .padding(.vertical, 8)
+                    .background(Color.owlSecondaryBackground)
+
+                    // Content
+                    ScrollView(.horizontal) {
+                        Text(formatted)
+                            .font(.system(size: 12, design: .monospaced))
+                            .textSelection(.enabled)
+                            .padding(12)
+                            .frame(maxWidth: .infinity, alignment: .leading)
+                    }
+                }
+                .cornerRadius(8)
+                .padding(.top, 8)
             }
         }
     }
 
-    /// Displays body parameters extracted from the request body.
-    @ViewBuilder var bodyParameterRows: some View {
-        let params = bodyParameters
-        if !params.isEmpty {
-            ForEach(params, id: \.key) { key, value in
-                OwlRowView(title: "Body Parameter - \(key)", value: value)
-            }
-        }
-    }
-
-    /// Raw body shown only when it can't be parsed into key-value pairs.
-    @ViewBuilder var rawBodyRow: some View {
-        if bodyParameters.isEmpty,
-           let body = call.request?.body,
-           !body.isEmpty
-        {
-            let formatted = formatBody(body)
+    /// Displays request body as a separate section with formatted JSON and a copy button.
+    @ViewBuilder var bodySection: some View {
+        if let body = call.request?.body, !body.isEmpty {
+            let formatted = OwlContentFormatter.formatBodyAsJSON(body)
             if !formatted.isEmpty {
-                OwlRowView(title: "Request Body", value: formatted)
+                DisclosureGroup("Body", isExpanded: $isOpenBody) {
+                    VStack(spacing: 0) {
+                        // Header bar
+                        HStack {
+                            Text("\(body.count) bytes")
+                                .font(.caption2.weight(.bold))
+                                .foregroundStyle(.secondary)
+
+                            Spacer()
+
+                            Button {
+                                OwlClipboard.copy(formatted)
+                                showCopiedBodyToast = true
+                            } label: {
+                                Label("Copy", systemImage: "doc.on.doc")
+                                    .font(.subheadline)
+                            }
+                        }
+                        .padding(.horizontal, 12)
+                        .padding(.vertical, 8)
+                        .background(Color.owlSecondaryBackground)
+
+                        // Content
+                        ScrollView(.horizontal) {
+                            Text(formatted)
+                                .font(.system(size: 12, design: .monospaced))
+                                .textSelection(.enabled)
+                                .padding(12)
+                                .frame(maxWidth: .infinity, alignment: .leading)
+                        }
+                    }
+                    .cornerRadius(8)
+                    .padding(.top, 8)
+                }
             }
-        }
-    }
-
-    /// Computed property to extract and format body parameters from the request.
-    var bodyParameters: [(key: String, value: String)] {
-        guard let body = call.request?.body, !body.isEmpty else { return [] }
-        return OwlContentFormatter.extractParameters(from: body, headers: call.request?.headers)
-    }
-
-    /// Formats the body data based on its content type.
-    private func formatBody(_ body: Data) -> String {
-        let contentType = OwlContentFormatter.detectContentType(headers: call.request?.headers, body: body)
-        switch contentType {
-            case .json:
-                return OwlContentFormatter.formatJSON(body)
-            case .xml, .html:
-                return OwlContentFormatter.formatXML(body)
-            default:
-                return OwlContentFormatter.convertToString(body)
         }
     }
 
