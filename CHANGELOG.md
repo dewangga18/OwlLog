@@ -2,6 +2,29 @@
 
 All notable changes to the OwlLog project will be documented in this file.
 
+## [1.0.8] - 2026-05-25
+
+### Added
+- **Request body capture** — `OwlURLProtocol` now reads `httpBodyStream` and converts it to raw `Data` before forwarding to URLSession, ensuring multipart and encoded bodies are captured correctly for both logging and network delivery.
+- **Request body display** — `OwlRequestView` now shows a dedicated **Body** section with pretty-printed JSON, byte count, and a copy button — matching the response viewer style.
+- **Query parameters display** — `OwlRequestView` now shows a dedicated **Query Parameters** section with pretty-printed JSON and a copy button.
+- **`OwlContentFormatter.formatDictAsJSON`** — New utility method that formats a `[String: String]` dictionary as a pretty-printed, sorted JSON string.
+- **`OwlContentFormatter.formatBodyAsJSON`** — New utility method that formats raw body `Data` as pretty-printed JSON, falling back to plain string.
+- **`OwlContentFormatter.extractParameters`** — New utility method that extracts key-value pairs from a request body, supporting JSON and `application/x-www-form-urlencoded` content types.
+- **`OwlHeaderParser.isExcludedRequestHeader`** — New method to filter out internal/noise headers (e.g. `baggage`, `sentry-trace`) from user-facing output and generated cURL.
+
+### Changed
+- **`OwlCurlBuilder`** — Fully reworked: URL is now inlined in the first line, headers are filtered (excluded: `content-type`, `content-length`, `accept-encoding`, `accept-language`, `connection`, `user-agent`) and sorted alphabetically, body is included as `-d '...'`, output uses multiline `\` continuation format.
+- **`OwlDetailView`** — Renamed `Headers` tab to `Request` and replaced `OwlHeadersView` with the new `OwlRequestView` throughout.
+- **`OwlResponseView`** — Copy action now copies the formatted content (JSON/XML/text) instead of raw body bytes. Refactored `responseText(from:contentType:)` as a shared helper used by both display and copy.
+- **`OwlRequestView`** — `General` section is now leaner (URL, method, status only). Query params and body moved to their own dedicated sections below.
+
+### Fixed
+- **Request body nulled on intercept** — Reading `httpBodyStream` and replacing it with `httpBody = data` on `NSMutableURLRequest` before creating `newRequest` prevents URLSession from receiving an empty body.
+- **cURL missing body** — Body now appears in generated cURL commands for requests that use `httpBodyStream` internally.
+- **cURL header noise** — `content-type` and other low-value iOS headers are now excluded from generated cURL output.
+- **Response copy returning raw bytes** — `handleCopy()` in `OwlResponseView` now copies the formatted display string instead of calling `convertToString` on raw body data.
+
 ## [1.0.7] - 2026-03-13
 
 ### Added
