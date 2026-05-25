@@ -1,5 +1,5 @@
 //
-//  OwlHeadersView
+//  OwlRequestView
 //  OwlLog
 //
 //  Created by aaronevanjulio on 11/02/26.
@@ -8,14 +8,12 @@
 import OwlLog
 import SwiftUI
 
-/// The header view for OwlLog.
-public struct OwlHeadersView: View {
+/// The request detail view for OwlLog.
+public struct OwlRequestView: View {
     /// The HTTP call containing request and response data to display.
     let call: OwlHTTPCall
-
     /// Optional callback triggered when the replay action is invoked.
     let onReplay: (() -> Void)?
-
     /// Indicates whether the replay process is currently active.
     let isReplaying: Bool
 
@@ -28,10 +26,10 @@ public struct OwlHeadersView: View {
     /// Controls the expanded state of the "Response" disclosure section.
     @State var isOpenResponse = true
 
-    /// Controls the expanded state of the "Data Field" disclosure section.
+    /// Controls the expanded state of the "Form Data Fields" disclosure section.
     @State var isOpenDataField = true
 
-    /// Controls the expanded state of the "Data File" disclosure section.
+    /// Controls the expanded state of the "Form Data Files" disclosure section.
     @State var isOpenDataFile = true
 
     /// Controls visibility of the copy URL toast.
@@ -47,7 +45,6 @@ public struct OwlHeadersView: View {
         self.isReplaying = isReplaying
     }
 
-    /// The main body rendering the header sections of the HTTP call.
     public var body: some View {
         ScrollView {
             VStack(alignment: .leading, spacing: 16) {
@@ -71,12 +68,15 @@ public struct OwlHeadersView: View {
     }
 }
 
-private extension OwlHeadersView {
+private extension OwlRequestView {
     /// Displays general information about the HTTP request and response.
     var generalSection: some View {
         DisclosureGroup("General", isExpanded: $isOpenGeneral) {
             VStack(alignment: .leading, spacing: 8) {
                 OwlRowView(title: "Request URL", value: call.uri)
+                queryParameterRows
+                bodyParameterRows
+                rawBodyRow
                 OwlRowView(title: "Request Method", value: call.method)
                 OwlRowView(
                     title: "Status Code",
@@ -88,9 +88,59 @@ private extension OwlHeadersView {
         }
     }
 
+    /// Displays query parameters extracted from the request URL.
+    @ViewBuilder var queryParameterRows: some View {
+        if let queryParams = call.request?.queryParameters, !queryParams.isEmpty {
+            ForEach(queryParams.sorted(by: { $0.key < $1.key }), id: \.key) { key, value in
+                OwlRowView(title: "Query Parameter - \(key)", value: value)
+            }
+        }
+    }
+
+    /// Displays body parameters extracted from the request body.
+    @ViewBuilder var bodyParameterRows: some View {
+        let params = bodyParameters
+        if !params.isEmpty {
+            ForEach(params, id: \.key) { key, value in
+                OwlRowView(title: "Body Parameter - \(key)", value: value)
+            }
+        }
+    }
+
+    /// Raw body shown only when it can't be parsed into key-value pairs.
+    @ViewBuilder var rawBodyRow: some View {
+        if bodyParameters.isEmpty,
+           let body = call.request?.body,
+           !body.isEmpty
+        {
+            let formatted = formatBody(body)
+            if !formatted.isEmpty {
+                OwlRowView(title: "Request Body", value: formatted)
+            }
+        }
+    }
+
+    /// Computed property to extract and format body parameters from the request.
+    var bodyParameters: [(key: String, value: String)] {
+        guard let body = call.request?.body, !body.isEmpty else { return [] }
+        return OwlContentFormatter.extractParameters(from: body, headers: call.request?.headers)
+    }
+
+    /// Formats the body data based on its content type.
+    private func formatBody(_ body: Data) -> String {
+        let contentType = OwlContentFormatter.detectContentType(headers: call.request?.headers, body: body)
+        switch contentType {
+            case .json:
+                return OwlContentFormatter.formatJSON(body)
+            case .xml, .html:
+                return OwlContentFormatter.formatXML(body)
+            default:
+                return OwlContentFormatter.convertToString(body)
+        }
+    }
+
     /// Displays the request headers associated with the HTTP call.
-    @ViewBuilder
-    var requestHeadersSection: some View {
+    @ViewBuilder var requestHeadersSection: some View {
         if let headers = call.request?.sortedHeaders {
             DisclosureGroup("Request Headers", isExpanded: $isOpenRequest) {
                 VStack(alignment: .leading, spacing: 4) {
@@ -104,9 +154,8 @@ private extension OwlHeadersView {
         }
     }
 
-    /// Displays the response headers returned by the server.
-    @ViewBuilder
-    var responseHeadersSection: some View {
+    /// Displays response headers.
+    @ViewBuilder var responseHeadersSection: some View {
         if let responseHeaders = call.response?.sortedHeaders {
             DisclosureGroup("Response Headers", isExpanded: $isOpenResponse) {
                 VStack(alignment: .leading, spacing: 4) {
@@ -120,9 +169,8 @@ private extension OwlHeadersView {
         }
     }
 
-    /// Displays form data fields included in the HTTP request body.
-    @ViewBuilder
-    var formDataFieldsSection: some View {
+    /// Displays the response headers returned by the server.
+    @ViewBuilder var formDataFieldsSection: some View {
         if let fields = call.request?.formDataFields, !fields.isEmpty {
             DisclosureGroup("Form Data Fields", isExpanded: $isOpenDataField) {
                 VStack(alignment: .leading, spacing: 4) {
@@ -137,16 +185,12 @@ private extension OwlHeadersView {
     }
 
     /// Displays uploaded files included in the HTTP request form data.
-    @ViewBuilder
-    var formDataFilesSection: some View {
+    @ViewBuilder var formDataFilesSection: some View {
         if let files = call.request?.formDataFiles, !files.isEmpty {
             DisclosureGroup("Form Data Files", isExpanded: $isOpenDataFile) {
                 VStack(alignment: .leading, spacing: 4) {
                     ForEach(files, id: \.fileName) { file in
-                        OwlRowView(
-                            title: file.fileName,
-                            value: file.contentType
-                        )
+                        OwlRowView(title: file.fileName, value: file.contentType)
                     }
                 }
                 .frame(maxWidth: .infinity, alignment: .leading)

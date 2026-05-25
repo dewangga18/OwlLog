@@ -24,7 +24,7 @@ public struct OwlDetailView: View {
     /// The error for the replay functionality.
     @State private var replayError: Error?
     /// The selected tab for detail content.
-    @State private var selectedTab: DetailTab = .headers
+    @State private var selectedTab: DetailTab = .request
     /// Controls visibility of the copied toast.
     @State private var showCopiedToastResponse = false
     @State private var showCopiedToastCurl = false
@@ -52,7 +52,7 @@ private extension OwlDetailView {
 
     /// Tabs available in the detail screen.
     enum DetailTab: Hashable {
-        case headers
+        case request
         case response
         case error
     }
@@ -73,7 +73,7 @@ private extension OwlDetailView {
     func moveTab(by offset: Int) {
         let tabs = availableTabs
         guard let index = tabs.firstIndex(of: selectedTab) else {
-            selectedTab = tabs.first ?? .headers
+            selectedTab = tabs.first ?? .request
             return
         }
 
@@ -169,8 +169,8 @@ private extension OwlDetailView {
         #if swift(>=6.0)
         if #available(iOS 18.0, *) {
             TabView(selection: $selectedTab) {
-                Tab("Headers", systemImage: "network", value: DetailTab.headers) {
-                    OwlHeadersView(
+                Tab("Request", systemImage: "network", value: DetailTab.headers) {
+                    OwlRequestView(
                         call: call,
                         onReplay: OwlService.shared.urlSession != nil ? handleReplay : nil,
                         isReplaying: isReplaying
@@ -214,14 +214,14 @@ private extension OwlDetailView {
     @ViewBuilder
     var fallbackTabView: some View {
         TabView(selection: $selectedTab) {
-            OwlHeadersView(
+            OwlRequestView(
                 call: call,
                 onReplay: OwlService.shared.urlSession != nil ? handleReplay : nil,
                 isReplaying: isReplaying
             )
             .tag(DetailTab.headers)
             .tabItem {
-                Label("Headers", systemImage: "network")
+                Label("Request", systemImage: "network")
             }
 
             if call.response != nil {
