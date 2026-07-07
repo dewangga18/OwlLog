@@ -2,6 +2,25 @@
 
 All notable changes to the OwlLog project will be documented in this file.
 
+## [1.0.10] - 2026-07-07
+
+### Added
+- **`OwlDataImageView`** — New shared SwiftUI view that decodes raw `Data` into an image asynchronously. Shows a `ProgressView` loading indicator while decoding, renders the actual image on success, and falls back to an error placeholder if the data is undecodable. Cross-platform: uses `UIImage` on iOS and `NSImage` on macOS.
+- **Image preview in Request body** — `OwlRequestView` Body section now renders an inline image preview (with loading indicator) when the request body content type is `image/*`, instead of a static placeholder.
+- **Image preview in Response body** — `OwlResponseView` now renders an inline image preview (with loading indicator) for image responses, replacing the previous "Image preview not yet supported" placeholder.
+- **`OwlContentType.multipart`** — New content type case added to `OwlContentType` enum for proper `multipart/form-data` detection in `OwlContentFormatter.detectContentType`.
+- **Multipart body parser** — `OwlURLProtocol` now parses `multipart/form-data` request bodies at intercept time, extracting text fields into `formDataFields` and file upload metadata (filename, content type, byte size) into `formDataFiles`. The **Form Data Fields** section in `OwlRequestView` shows parsed text field names and values; the **Form Data Files** section shows file name and content type per uploaded file. Note: uploaded files are shown as metadata only — no inline image preview is rendered for multipart file parts.
+
+### Changed
+- **`OwlContentFormatter.formatBodyAsJSON`** — Now uses `String(data:encoding:)` instead of `String(decoding:as:)` so binary (non-UTF-8) body data returns an empty string instead of a string full of replacement characters. JSON is still pretty-printed; plain UTF-8 text falls back correctly.
+- **`OwlRequestView` Body section** — Restructured to branch on content type before rendering: image bodies → `OwlDataImageView`; multipart bodies → informative size label directing to Form Data sections; text/JSON → existing formatted text viewer with copy button. Body section is hidden entirely when there is no displayable content.
+
+### Fixed
+- **App crash on image body** — Viewing a request or response whose body contains binary image data no longer crashes or hangs the UI. The root cause was `formatBodyAsJSON` passing binary data through `String(decoding:as:UTF8.self)` which produced enormous replacement-character strings that overwhelmed the SwiftUI `Text` renderer.
+- **Form Data sections never populated** — `OwlURLProtocol.startLoading()` was not setting `formDataFiles` or `formDataFields` on `OwlHTTPRequest`, so the Form Data sections in `OwlRequestView` were always empty for multipart requests. The new multipart parser fixes this.
+- **`OwlDataImageView` Swift 6 Sendable violation** — Replaced `LoadState.success(SwiftUI.Image)` with `LoadState.success(UIImage / NSImage)`. Platform-native image types are `Sendable`-safe across actor boundaries; `SwiftUI.Image` is only constructed on the main actor during rendering.
+- **`extractDispositionParam` unquoted values** — `Content-Disposition` parameter parsing now handles both quoted (`name="field"`) and unquoted (`name=field`) formats, preventing fields from being labeled `"unknown"` when sent by clients that omit quotes.
+
 ## [1.0.8] - 2026-05-25
 
 ### Added
