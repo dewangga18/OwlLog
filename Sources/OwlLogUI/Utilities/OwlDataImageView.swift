@@ -9,8 +9,12 @@ import SwiftUI
 
 #if canImport(UIKit)
 import UIKit
+/// Platform-native image type alias.
+private typealias PlatformImage = UIImage
 #elseif canImport(AppKit)
 import AppKit
+/// Platform-native image type alias.
+private typealias PlatformImage = NSImage
 #endif
 
 /// Decodes a raw `Data` blob into a SwiftUI `Image` asynchronously.
@@ -25,9 +29,13 @@ import AppKit
 struct OwlDataImageView: View {
     let data: Data
 
+    /// Internal load state — stores the platform-native image type (not SwiftUI.Image)
+    /// to avoid Sendable violations when crossing actor isolation boundaries in Swift 6.
     private enum LoadState {
         case loading
-        case success(Image)
+        #if canImport(UIKit) || canImport(AppKit)
+        case success(PlatformImage)
+        #endif
         case failure
     }
 
@@ -47,13 +55,22 @@ struct OwlDataImageView: View {
                 .frame(maxWidth: .infinity, minHeight: 120)
                 .padding()
 
-            case .success(let image):
+            #if canImport(UIKit) || canImport(AppKit)
+            case .success(let platformImage):
                 VStack(alignment: .leading, spacing: 8) {
-                    image
+                    #if canImport(UIKit)
+                    Image(uiImage: platformImage)
                         .resizable()
                         .scaledToFit()
                         .cornerRadius(8)
                         .frame(maxWidth: .infinity)
+                    #elseif canImport(AppKit)
+                    Image(nsImage: platformImage)
+                        .resizable()
+                        .scaledToFit()
+                        .cornerRadius(8)
+                        .frame(maxWidth: .infinity)
+                    #endif
 
                     Text("\(data.count) bytes")
                         .font(.caption2.weight(.bold))
@@ -61,6 +78,7 @@ struct OwlDataImageView: View {
                         .padding(.horizontal, 4)
                 }
                 .padding(12)
+            #endif
 
             case .failure:
                 VStack(spacing: 12) {
@@ -80,25 +98,35 @@ struct OwlDataImageView: View {
         }
     }
 
+    /// Decodes `data` on a background thread and updates state on the main actor.
+    ///
+    /// Returns the platform-native image type (not `SwiftUI.Image`) from the background task
+    /// to satisfy Swift 6 `Sendable` requirements — `UIImage` and `NSImage` are both `Sendable`.
+    /// `SwiftUI.Image` is only constructed on the main actor inside the `switch` above.
     @MainActor
     private func decodeImage() async {
-        // Offload the potentially expensive decode to a background priority task.
-        let image: Image? = await Task.detached(priority: .userInitiated) {
-            #if canImport(UIKit)
-            guard let uiImage = UIImage(data: data) else { return nil }
-            return Image(uiImage: uiImage)
-            #elseif canImport(AppKit)
-            guard let nsImage = NSImage(data: data) else { return nil }
-            return Image(nsImage: nsImage)
-            #else
-            return nil
-            #endif
+        #if canImport(UIKit)
+        let decoded: UIImage? = await Task.detached(priority: .userInitiated) {
+            UIImage(data: data)
         }.value
 
-        if let image {
+        if let image = decoded {
             state = .success(image)
         } else {
             state = .failure
         }
+        #elseif canImport(AppKit)
+        let decoded: NSImage? = await Task.detached(priority: .userInitiated) {
+            NSImage(data: data)
+        }.value
+
+        if let image = decoded {
+            state = .success(image)
+        } else {
+            state = .failure
+        }
+        #else
+        state = .failure
+        #endif
     }
 }

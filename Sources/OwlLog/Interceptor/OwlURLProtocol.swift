@@ -311,19 +311,39 @@ public final class OwlURLProtocol: URLProtocol {
 
     /// Extracts the value of a named parameter from a Content-Disposition header value.
     ///
+    /// Handles both quoted values (`name="field1"`) and unquoted values (`name=field1`).
+    ///
     /// - Parameters:
     ///   - param: The parameter name, e.g. `"name"` or `"filename"`.
     ///   - disposition: The full Content-Disposition value, e.g.
     ///     `form-data; name="field1"; filename="file.jpg"`
-    /// - Returns: The unquoted value, or `nil` if not found.
+    /// - Returns: The unquoted value, or `nil` if the parameter is not present.
     private static func extractDispositionParam(_ param: String, from disposition: String) -> String? {
-        let pattern = param + "=\""
-        guard let startRange = disposition.range(of: pattern, options: .caseInsensitive) else {
-            return nil
+        // Try quoted form first: name="value"
+        let quotedPattern = param + "=\""
+        if let startRange = disposition.range(of: quotedPattern, options: .caseInsensitive) {
+            let afterQuote = disposition[startRange.upperBound...]
+            if let endQuote = afterQuote.firstIndex(of: "\"") {
+                return String(afterQuote[afterQuote.startIndex ..< endQuote])
+            }
         }
-        let afterQuote = disposition[startRange.upperBound...]
-        guard let endQuote = afterQuote.firstIndex(of: "\"") else { return nil }
-        return String(afterQuote[afterQuote.startIndex ..< endQuote])
+
+        // Fall back to unquoted form: name=value (terminated by ; or end of string)
+        let unquotedPattern = param + "="
+        if let startRange = disposition.range(of: unquotedPattern, options: .caseInsensitive) {
+            let afterEquals = disposition[startRange.upperBound...]
+            // Value ends at the next semicolon or end of string.
+            let value: String
+            if let semicolon = afterEquals.firstIndex(of: ";") {
+                value = String(afterEquals[afterEquals.startIndex ..< semicolon])
+            } else {
+                value = String(afterEquals)
+            }
+            let trimmed = value.trimmingCharacters(in: .whitespaces)
+            return trimmed.isEmpty ? nil : trimmed
+        }
+
+        return nil
     }
 }
 
