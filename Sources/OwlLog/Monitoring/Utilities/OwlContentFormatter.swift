@@ -13,6 +13,7 @@ public enum OwlContentType: String {
     case xml
     case html
     case image
+    case multipart
     case text
 }
 
@@ -110,6 +111,9 @@ public enum OwlContentFormatter {
                 }
                 if type.contains("image") {
                     return .image
+                }
+                if type.contains("multipart") {
+                    return .multipart
                 }
                 if type.contains("text") {
                     return .text
@@ -246,7 +250,20 @@ public enum OwlContentFormatter {
     }
 
     /// Formats raw body Data as pretty-printed JSON, falls back to plain string.
+    /// Returns an empty string for non-UTF-8 binary data (e.g. image bytes) to prevent
+    /// callers from receiving and rendering a huge replacement-character String.
     public static func formatBodyAsJSON(_ body: Data) -> String {
-        return OwlContentFormatter.formatJSON(body)
+        // Try JSON first
+        if let jsonObject = try? JSONSerialization.jsonObject(with: body),
+           JSONSerialization.isValidJSONObject(jsonObject),
+           let formatted = try? JSONSerialization.data(withJSONObject: jsonObject, options: [.prettyPrinted]),
+           let string = String(data: formatted, encoding: .utf8)
+        {
+            return string
+        }
+
+        // Fallback to plain UTF-8 text — use String(data:encoding:) which returns nil
+        // for non-UTF-8 bytes, unlike String(decoding:as:) which silently replaces them.
+        return String(data: body, encoding: .utf8) ?? ""
     }
 }

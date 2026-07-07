@@ -74,6 +74,19 @@ public final class OwlURLProtocol: URLProtocol {
         let id = UUID().uuidString
         let startTime = Date()
 
+        // Parse multipart body parts when Content-Type is multipart/form-data,
+        // so formDataFields and formDataFiles are populated for the UI.
+        var formDataFiles: [OwlHTTPFormDataFile]? = nil
+        var formDataFields: [OwlFormDataField]? = nil
+        if let contentTypeHeader = newRequest.value(forHTTPHeaderField: "Content-Type"),
+           contentTypeHeader.lowercased().contains("multipart/form-data"),
+           let body = newRequest.httpBody
+        {
+            let parsed = Self.parseMultipartBody(body, contentTypeHeader: contentTypeHeader)
+            formDataFiles = parsed.files.isEmpty ? nil : parsed.files
+            formDataFields = parsed.fields.isEmpty ? nil : parsed.fields
+        }
+
         let requestModel = OwlHTTPRequest(
             size: newRequest.httpBody?.count ?? 0,
             time: startTime,
@@ -81,7 +94,9 @@ public final class OwlURLProtocol: URLProtocol {
             body: newRequest.httpBody,
             contentType: newRequest.value(forHTTPHeaderField: "Content-Type"),
             curl: OwlCurlBuilder.generate(from: newRequest),
-            queryParameters: newRequest.url?.queryParameters ?? [:]
+            queryParameters: newRequest.url?.queryParameters ?? [:],
+            formDataFiles: formDataFiles,
+            formDataFields: formDataFields
         )
 
         let call = OwlHTTPCall(
@@ -188,5 +203,150 @@ public final class OwlURLProtocol: URLProtocol {
     /// Stops loading the specified request.
     override public func stopLoading() {
         dataTask?.cancel()
+    }
+
+    // MARK: - Multipart Parser
+
+    /// Result type from parsing a multipart/form-data body.
+    private struct MultipartParseResult {
+        var files: [OwlHTTPFormDataFile] = []
+        var fields: [OwlFormDataField] = []
+    }
+
+    /// Parses a raw `multipart/form-data` body and extracts text fields and file metadata.
+    ///
+    /// - Parameters:
+    ///   - body: The raw request body bytes.
+    ///   - contentTypeHeader: The full `Content-Type` header value, e.g.
+    ///     `multipart/form-data; boundary=----WebKitFormBoundary7MA4YWxkTrZu0gW`
+    /// - Returns: A result struct with extracted `files` and `fields`.
+    private static func parseMultipartBody(
+        _ body: Data,
+        contentTypeHeader: String
+    ) -> MultipartParseResult {
+        var result = MultipartParseResult()
+
+        // Extract boundary from Content-Type header.
+        // e.g. "multipart/form-data; boundary=----WebKitFormBoundary7MA4YWxkTrZu0gW"
+        guard let boundaryValue = contentTypeHeader
+            .components(separatedBy: ";")
+            .first(where: { $0.trimmingCharacters(in: .whitespaces).lowercased().hasPrefix("boundary=") })?
+            .trimmingCharacters(in: .whitespaces)
+            .dropFirst("boundary=".count)
+            .trimmingCharacters(in: CharacterSet(charactersIn: "\""))
+        else {
+            return result
+        }
+
+        let boundary = "--" + boundaryValue
+        guard let boundaryData = boundary.data(using: .utf8),
+              let crlfData = "\r\n".data(using: .utf8),
+              let crlfcrlfData = "\r\n\r\n".data(using: .utf8)
+        else {
+            return result
+        }
+
+        // Split body on boundary markers.
+        let parts = body.components(separatedBy: boundaryData)
+
+        for part in parts {
+            // Skip empty parts and the final "--" epilogue.
+            guard part.count > 4 else { continue }
+
+            // Each valid part starts with CRLF (from the boundary line), then headers,
+            // then CRLF CRLF separator, then the part body.
+            var partData = part
+            // Strip leading CRLF that follows the boundary.
+            if partData.starts(with: crlfData) {
+                partData = partData.dropFirst(2)
+            }
+            // Strip trailing CRLF before the next boundary.
+            if partData.hasSuffix(crlfData) {
+                partData = partData.dropLast(2)
+            }
+            // Skip final "--" epilogue.
+            if partData.starts(with: Data([0x2D, 0x2D])) { continue } // "--"
+
+            // Find the header/body split (first blank line: \r\n\r\n).
+            guard let headerEndRange = partData.range(of: crlfcrlfData) else { continue }
+
+            let headerData = partData[partData.startIndex ..< headerEndRange.lowerBound]
+            let bodyData = partData[headerEndRange.upperBound...]
+
+            // Parse part headers (key: value pairs, CRLF-separated).
+            guard let headerString = String(data: headerData, encoding: .utf8) else { continue }
+            var partHeaders: [String: String] = [:]
+            for line in headerString.components(separatedBy: "\r\n") {
+                let pair = line.split(separator: ":", maxSplits: 1).map { $0.trimmingCharacters(in: .whitespaces) }
+                if pair.count == 2 {
+                    partHeaders[pair[0].lowercased()] = pair[1]
+                }
+            }
+
+            // Content-Disposition is required.
+            guard let disposition = partHeaders["content-disposition"] else { continue }
+
+            // Extract "name" from Content-Disposition.
+            let name = Self.extractDispositionParam("name", from: disposition) ?? "unknown"
+
+            if let filename = Self.extractDispositionParam("filename", from: disposition) {
+                // This part is a file upload.
+                let fileContentType = partHeaders["content-type"] ?? "application/octet-stream"
+                result.files.append(
+                    OwlHTTPFormDataFile(
+                        length: bodyData.count,
+                        fileName: filename,
+                        contentType: fileContentType
+                    )
+                )
+            } else {
+                // This part is a plain text field.
+                let value = String(data: bodyData, encoding: .utf8) ?? ""
+                result.fields.append(OwlFormDataField(name: name, value: value))
+            }
+        }
+
+        return result
+    }
+
+    /// Extracts the value of a named parameter from a Content-Disposition header value.
+    ///
+    /// - Parameters:
+    ///   - param: The parameter name, e.g. `"name"` or `"filename"`.
+    ///   - disposition: The full Content-Disposition value, e.g.
+    ///     `form-data; name="field1"; filename="file.jpg"`
+    /// - Returns: The unquoted value, or `nil` if not found.
+    private static func extractDispositionParam(_ param: String, from disposition: String) -> String? {
+        let pattern = param + "=\""
+        guard let startRange = disposition.range(of: pattern, options: .caseInsensitive) else {
+            return nil
+        }
+        let afterQuote = disposition[startRange.upperBound...]
+        guard let endQuote = afterQuote.firstIndex(of: "\"") else { return nil }
+        return String(afterQuote[afterQuote.startIndex ..< endQuote])
+    }
+}
+
+// MARK: - Data helpers (file-private, used only by OwlURLProtocol multipart parser)
+
+private extension Data {
+    /// Splits the receiver around every occurrence of `separator`, similar to `String.components(separatedBy:)`.
+    func components(separatedBy separator: Data) -> [Data] {
+        var parts: [Data] = []
+        var searchStart = startIndex
+
+        while let separatorRange = range(of: separator, in: searchStart ..< endIndex) {
+            parts.append(self[searchStart ..< separatorRange.lowerBound])
+            searchStart = separatorRange.upperBound
+        }
+
+        parts.append(self[searchStart ..< endIndex])
+        return parts
+    }
+
+    /// Returns `true` if the receiver ends with the given `suffix`.
+    func hasSuffix(_ suffix: Data) -> Bool {
+        guard count >= suffix.count else { return false }
+        return self[(endIndex - suffix.count)...] == suffix
     }
 }

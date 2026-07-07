@@ -170,22 +170,13 @@ private extension OwlResponseView {
             .textSelection(.enabled)
     }
 
-    /// Placeholder view shown when the response content is an image and preview rendering is not yet supported.
+    /// Decodes and displays the response image body asynchronously with a loading indicator.
+    @ViewBuilder
     func buildImageContent() -> some View {
-        VStack(spacing: 16) {
-            Image(systemName: "photo")
-                .font(.system(size: 64))
-                .foregroundColor(.gray)
-
-            Text("Image preview not yet supported")
-                .foregroundColor(.gray)
-
-            Text("Check the Request tab for image metadata")
-                .font(.system(size: 12))
-                .foregroundColor(.gray)
+        if let body = call.response?.body {
+            OwlDataImageView(data: body)
+                .frame(maxWidth: .infinity)
         }
-        .frame(maxWidth: .infinity)
-        .padding()
     }
 
     /// Displays plain text response content using a monospaced font.

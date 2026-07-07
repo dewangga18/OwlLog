@@ -143,44 +143,72 @@ private extension OwlRequestView {
     }
 
     /// Displays request body as a separate section with formatted JSON and a copy button.
+    /// Binary image bodies are decoded asynchronously via `OwlDataImageView` with a loading
+    /// indicator while the image renders. Multipart/form-data bodies are not decoded — the
+    /// parsed parts are already shown in formDataFieldsSection and formDataFilesSection.
     @ViewBuilder var bodySection: some View {
         if let body = call.request?.body, !body.isEmpty {
-            let formatted = OwlContentFormatter.formatBodyAsJSON(body)
-            if !formatted.isEmpty {
+            let requestHeaders = call.request?.headers ?? [:]
+            let contentType = OwlContentFormatter.detectContentType(headers: requestHeaders, body: body)
+            // Pre-format for the text case; computed here so we can guard on emptiness
+            // before rendering the DisclosureGroup header.
+            let formatted = (contentType != .image && contentType != .multipart)
+                ? OwlContentFormatter.formatBodyAsJSON(body)
+                : ""
+
+            // Only show the Body section when there is displayable content.
+            if contentType == .image || contentType == .multipart || !formatted.isEmpty {
                 DisclosureGroup("Body", isExpanded: $isOpenBody) {
-                    VStack(spacing: 0) {
-                        // Header bar
-                        HStack {
-                            Text("\(body.count) bytes")
-                                .font(.caption2.weight(.bold))
-                                .foregroundStyle(.secondary)
+                    if contentType == .image {
+                        // Decode and display the image asynchronously with a loading indicator.
+                        OwlDataImageView(data: body)
+                            .frame(maxWidth: .infinity, alignment: .leading)
+                    } else if contentType == .multipart {
+                        // Multipart body is raw binary — do NOT attempt to decode.
+                        // Individual parts are displayed in Form Data Fields / Form Data Files sections below.
+                        HStack(spacing: 8) {
+                            Image(systemName: "doc.on.doc")
+                                .foregroundColor(.gray)
+                            Text("Multipart form-data (\(body.count) bytes) — see Form Data sections below")
+                                .font(.system(size: 12, design: .monospaced))
+                                .foregroundColor(.secondary)
+                        }
+                        .frame(maxWidth: .infinity, alignment: .leading)
+                        .padding(12)
+                    } else {
+                        VStack(spacing: 0) {
+                            // Header bar
+                            HStack {
+                                Text("\(body.count) bytes")
+                                    .font(.caption2.weight(.bold))
+                                    .foregroundStyle(.secondary)
 
-                            Spacer()
+                                Spacer()
 
-                            Button {
-                                OwlClipboard.copy(formatted)
-                                showCopiedBodyToast = true
-                            } label: {
-                                Label("Copy", systemImage: "doc.on.doc")
-                                    .font(.subheadline)
+                                Button {
+                                    OwlClipboard.copy(formatted)
+                                    showCopiedBodyToast = true
+                                } label: {
+                                    Label("Copy", systemImage: "doc.on.doc")
+                                        .font(.subheadline)
+                                }
+                            }
+                            .padding(.horizontal, 12)
+                            .padding(.vertical, 8)
+                            .background(Color.owlSecondaryBackground)
+
+                            // Content
+                            ScrollView(.horizontal) {
+                                Text(formatted)
+                                    .font(.system(size: 12, design: .monospaced))
+                                    .textSelection(.enabled)
+                                    .padding(12)
+                                    .frame(maxWidth: .infinity, alignment: .leading)
                             }
                         }
-                        .padding(.horizontal, 12)
-                        .padding(.vertical, 8)
-                        .background(Color.owlSecondaryBackground)
-
-                        // Content
-                        ScrollView(.horizontal) {
-                            Text(formatted)
-                                .font(.system(size: 12, design: .monospaced))
-                                .textSelection(.enabled)
-                                .padding(12)
-                                .frame(maxWidth: .infinity, alignment: .leading)
-                        }
                     }
-                    .cornerRadius(8)
-                    .padding(.top, 8)
                 }
+                .padding(.top, 8)
             }
         }
     }
