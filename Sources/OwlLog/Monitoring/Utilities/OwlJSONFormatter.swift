@@ -17,7 +17,7 @@ public enum OwlJSONFormatter {
                 withJSONObject: object,
                 options: [.prettyPrinted]
             )
-            return String(data: formatted, encoding: .utf8) ?? ""
+            return OwlContentFormatter.unescapeSlashes(String(data: formatted, encoding: .utf8) ?? "")
         } catch {
             return String(data: data, encoding: .utf8) ?? ""
         }

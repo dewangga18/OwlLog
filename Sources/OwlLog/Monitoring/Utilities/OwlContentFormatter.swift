@@ -26,6 +26,11 @@ public enum OwlContentFormatter {
         }
         return String(describing: body)
     }
+
+    /// Replaces escaped forward slashes (`\/`) with normal slashes (`/`).
+    static func unescapeSlashes(_ string: String) -> String {
+        string.replacingOccurrences(of: "\\/", with: "/")
+    }
     
     /// Extracts key-value parameters from structured request body data.
     /// Pass `headers` so content type detection uses Content-Type header instead of body sniffing.
@@ -89,7 +94,7 @@ public enum OwlContentFormatter {
            let data = try? JSONSerialization.data(withJSONObject: value, options: [.sortedKeys]),
            let string = String(data: data, encoding: .utf8)
         {
-            return string
+            return unescapeSlashes(string)
         }
 
         return String(describing: value)
@@ -181,7 +186,7 @@ public enum OwlContentFormatter {
                 withJSONObject: object,
                 options: [.prettyPrinted]
             )
-            return String(decoding: formatted, as: UTF8.self)
+            return unescapeSlashes(String(decoding: formatted, as: UTF8.self))
         } catch {
             return String(describing: json)
         }
@@ -246,7 +251,7 @@ public enum OwlContentFormatter {
         ) else {
             return dict.map { "\($0.key): \($0.value)" }.sorted().joined(separator: "\n")
         }
-        return String(decoding: data, as: UTF8.self)
+        return unescapeSlashes(String(decoding: data, as: UTF8.self))
     }
 
     /// Formats raw body Data as pretty-printed JSON, falls back to plain string.
@@ -259,7 +264,7 @@ public enum OwlContentFormatter {
            let formatted = try? JSONSerialization.data(withJSONObject: jsonObject, options: [.prettyPrinted]),
            let string = String(data: formatted, encoding: .utf8)
         {
-            return string
+            return unescapeSlashes(string)
         }
 
         // Fallback to plain UTF-8 text — use String(data:encoding:) which returns nil

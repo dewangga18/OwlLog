@@ -2,6 +2,11 @@
 
 All notable changes to the OwlLog project will be documented in this file.
 
+## [1.0.11] - 2026-08-05
+
+### Fixed
+- **URLs escaped as `https:\/\/example.com` in formatted JSON** — Foundation's `JSONSerialization` escapes forward slashes (`/` → `\/`) when writing JSON, so request/response bodies, query parameters, and copied payloads containing URLs displayed with stray backslashes. `OwlContentFormatter` and `OwlJSONFormatter` now undo this escaping after pretty-printing, so displayed and copied JSON matches the original payload. Applied to `formatJSON`, `formatBodyAsJSON`, `formatDictAsJSON`, `parameterValue`, and `prettyPrinted(from:)`.
+
 ## [1.0.10] - 2026-07-07
 
 ### Added
