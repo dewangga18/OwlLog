@@ -7,9 +7,12 @@ import UIKit
 @MainActor public final class OwlActivityKitLifecycleDelegate: NSObject, UIApplicationDelegate {
     /// The cancellables for the session.
     private var cancellables: Set<AnyCancellable> = []
-    
+
     /// The pending task that starts the session after dismissing existing activities.
     private var startTask: Task<Void, Never>?
+
+    /// Used to skip the redundant `didBecomeActive`after real background pauses.
+    private var isPaused = false
 
     override public init() {
         super.init()
@@ -21,8 +24,12 @@ import UIKit
         return true
     }
 
-    /// Starts a session when the app becomes active.
+    /// Resumes the session when the app becomes active.
     public func applicationDidBecomeActive(_ application: UIApplication) {
+        // `didFinishLaunching` already started the session; only re-start after the
+        // app was actually paused (background/inactive), avoiding double init at launch.
+        guard isPaused else { return }
+        isPaused = false
         startSession()
     }
 
@@ -73,6 +80,7 @@ import UIKit
 
     /// Pauses the session (keeps the Live Activity visible).
     private func pauseSession() {
+        isPaused = true
         cancellables.removeAll()
         startTask?.cancel()
         startTask = nil

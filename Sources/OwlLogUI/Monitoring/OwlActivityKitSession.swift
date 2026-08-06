@@ -26,6 +26,10 @@ import UIKit
     private var startRequestTask: Task<Void, Never>?
     /// Monotonically increasing counter used to ignore stale in-flight start requests.
     private var startRequestGeneration = 0
+    /// The in-flight task that updates the Live Activity, retained to serialize rapid updates.
+    private var updateTask: Task<Void, Never>?
+    /// Monotonically increasing counter used to coalesce rapid updates into the latest one.
+    private var updateGeneration = 0
 
     /// Number of attempts when requesting the initial Live Activity.
     private let startRetryAttempts = 2
@@ -44,6 +48,9 @@ import UIKit
                 return
             }
             self.activity = nil
+            self.updateGeneration += 1
+            self.updateTask?.cancel()
+            self.updateTask = nil
         }
 
         isActive = true
@@ -183,6 +190,9 @@ import UIKit
                     // when the app returns to the foreground (via `OwlActivityKitLifecycleDelegate`).
                     self.activity = nil
                     self.startRequestGeneration += 1
+                    self.updateGeneration += 1
+                    self.updateTask?.cancel()
+                    self.updateTask = nil
                     self.isActive = false
                     if generation == self.monitorGeneration {
                         self.monitorTask = nil
@@ -194,6 +204,9 @@ import UIKit
                     // system ended it while the session is active). When `stop()` ends
                     // the activity, `isActive` is already `false`, so no recreation happens.
                     self.activity = nil
+                    self.updateGeneration += 1
+                    self.updateTask?.cancel()
+                    self.updateTask = nil
 
                     try? await Task.sleep(nanoseconds: 500_000_000)
 
@@ -237,6 +250,9 @@ import UIKit
         monitorGeneration += 1
         monitorTask?.cancel()
         monitorTask = nil
+        updateGeneration += 1
+        updateTask?.cancel()
+        updateTask = nil
     }
 
     /// Stops the session and ends the Live Activity.
@@ -248,6 +264,9 @@ import UIKit
         monitorGeneration += 1
         monitorTask?.cancel()
         monitorTask = nil
+        updateGeneration += 1
+        updateTask?.cancel()
+        updateTask = nil
 
         guard let activity else { return }
         self.activity = nil
@@ -279,15 +298,26 @@ import UIKit
             staleDate: Date().addingTimeInterval(3600)
         )
 
-        Task {
+        // Serialize rapid updates: cancel any in-flight update and coalesce into the
+        // latest content, so bursts of network traffic never pile up update calls.
+        updateGeneration += 1
+        let generation = updateGeneration
+        updateTask?.cancel()
+        updateTask = Task { @MainActor in
+            // Skip the update entirely if this task was superseded while waiting
+            // to run — the newer task already carries the latest content.
+            guard !Task.isCancelled else { return }
             await activity.update(content)
+            if generation == self.updateGeneration {
+                self.updateTask = nil
+            }
         }
     }
 
 }
 
 /// The attributes for ActivityKit.
-@available(iOS 16.2, *)
+@available(iOS 16.1, *)
 public struct OwlLiveActivityAttributes: ActivityAttributes, Sendable {
     /// The content state for ActivityKit.
     public struct ContentState: Codable, Hashable, Sendable {
@@ -301,7 +331,7 @@ public struct OwlLiveActivityAttributes: ActivityAttributes, Sendable {
 }
 
 /// The cleanup for ActivityKit.
-@available(iOS 16.2, *)
+@available(iOS 16.1, *)
 public enum OwlLiveActivityCleanup {
     /// Dismisses all existing activities.
     public static func dismissExisting() async {
