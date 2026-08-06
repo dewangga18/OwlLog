@@ -4,6 +4,10 @@ All notable changes to the OwlLog project will be documented in this file.
 
 ## [1.0.12] - 2026-08-06
 
+### Added
+- **Configurable Live Activity staleness** — `OwlActivityKitSession.staleDateInterval` is now a public property (default 5 minutes) controlling how long the Live Activity stays fresh after its last update. Previously the stale date was hardcoded to 1 hour, so a leftover activity from a force-quit (where `applicationWillTerminate` isn't called) could linger on the Lock Screen for a full hour. Integrators can now tune how quickly leftover activities are cleaned up.
+- **Widget example supports iOS 16.1** — `OwlLogActivityWidget` no longer requires iOS 16.2; `ActivityConfiguration` is available from 16.1, matching `OwlLiveActivityAttributes`. (Live Activities in the host app still require 16.2+.)
+
 ### Fixed
 - **Live Activity silently disabled until app restart** — Previously, when the initial Live Activity request failed (e.g. app was backgrounded, the system's activity limit was reached, or the entitlement was unavailable), the Live Activity would never appear again until the app was fully restarted. Now a failed start is retried automatically and the session resets cleanly, so the Live Activity recovers on the next `start()`.
 - **Live Activity lost during rapid foreground/background transitions** — Previously, quickly switching apps, hitting breakpoints, or dismissing system alerts while debugging could leave the session in a state where the Live Activity would no longer be created until the app was killed. Session state now stays consistent across `start()`/`stop()` cycles, so the Live Activity keeps working after these transitions.
@@ -12,6 +16,7 @@ All notable changes to the OwlLog project will be documented in this file.
 - **Live Activity double-started at app launch** — Previously both `didFinishLaunching` and the immediately-following `didBecomeActive` started the session, and the second run could dismiss a just-created Live Activity. Launch now initializes the session exactly once; `didBecomeActive` only resumes the session after a real background pause.
 - **Live Activity updates racing during traffic bursts** — Previously, rapid network activity could enqueue many concurrent `update` calls against the Live Activity. Updates are now serialized and coalesced to the latest state, avoiding out-of-order updates and wasted calls.
 - **`OwlActivityKitSession` fallback API aligned across iOS versions** — Previously, the `updateIfNeeded(calls:errorsCount:)` overload existed only in the iOS <16.2 fallback branch and was missing from the main implementation, so the API surface differed by OS version. The unused overload was removed so the API is identical on all supported iOS versions.
+- **Live Activity updates hammering ActivityKit's update budget** — Previously, every change in call/error counts immediately issued an `update` call to ActivityKit, which can pile up against the system's update budget during traffic bursts. Updates are now debounced for 0.5s, collapsing bursts into a single update call.
 
 ## [1.0.11] - 2026-08-05
 

@@ -1,12 +1,14 @@
 // Example WidgetKit implementation for OwlLog Live Activity.
 // Copy this into your app's Widget Extension target.
+// Note: Live Activities require iOS 16.1+ for the widget itself and iOS 16.2+
+// in the host app (the ActivityKit APIs used by OwlActivityKitSession).
 
 import WidgetKit
 import ActivityKit
 import OwlLogUI
 import SwiftUI
 
-@available(iOSApplicationExtension 16.2, *)
+@available(iOSApplicationExtension 16.1, *)
 struct OwlLogActivityWidget: Widget {
     var body: some WidgetConfiguration {
         ActivityConfiguration(for: OwlLiveActivityAttributes.self) { context in
@@ -27,7 +29,10 @@ struct OwlLogActivityWidget: Widget {
                 }
             }
             .padding()
-            .widgetURL(URL(string: "owllog://open-inspector")) // your deep link
+            // Your host app must register the "owllog" URL scheme and handle this
+            // URL (e.g. via onOpenURL or application(_:open:)) to open the OwlLog
+            // inspector when the Live Activity is tapped.
+            .widgetURL(URL(string: "owllog://open-inspector"))
         } dynamicIsland: { context in
             DynamicIsland {
                 DynamicIslandExpandedRegion(.center) {

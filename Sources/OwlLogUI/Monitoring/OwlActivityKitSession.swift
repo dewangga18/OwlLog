@@ -35,6 +35,19 @@ import UIKit
     private let startRetryAttempts = 2
     /// Delay between retry attempts.
     private let startRetryDelay: UInt64 = 500_000_000 // 0.5s
+    /// Delay before applying an activity update, coalescing bursts of traffic into
+    /// a single call and respecting ActivityKit's system update budget.
+    private let updateDebounceInterval: UInt64 = 500_000_000 // 0.5s
+
+    /// How long the Live Activity stays fresh after its last update before the
+    /// system marks it stale and removes it from the Lock Screen.
+    ///
+    /// This bounds how long a leftover activity survives after a force-quit (where
+    /// `applicationWillTerminate` is not called, so `stop()` never runs) and how
+    /// long the activity keeps showing while the app is backgrounded with
+    /// monitoring paused. Defaults to 5 minutes — shorten it for even faster
+    /// cleanup of leftovers after a force-quit.
+    public var staleDateInterval: TimeInterval = 300
 
     /// Starts the session.
     public func start() {
@@ -148,7 +161,7 @@ import UIKit
 
         let content = ActivityContent(
             state: contentState,
-            staleDate: Date().addingTimeInterval(3600)
+            staleDate: Date().addingTimeInterval(staleDateInterval)
         )
 
         activity = try Activity.request(
@@ -295,7 +308,7 @@ import UIKit
 
         let content = ActivityContent(
             state: contentState,
-            staleDate: Date().addingTimeInterval(3600)
+            staleDate: Date().addingTimeInterval(staleDateInterval)
         )
 
         // Serialize rapid updates: cancel any in-flight update and coalesce into the
@@ -306,6 +319,10 @@ import UIKit
         updateTask = Task { @MainActor in
             // Skip the update entirely if this task was superseded while waiting
             // to run — the newer task already carries the latest content.
+            guard !Task.isCancelled else { return }
+            // Debounce: wait briefly so rapid bursts collapse into one update call
+            // instead of hammering ActivityKit's system update budget.
+            try? await Task.sleep(nanoseconds: updateDebounceInterval)
             guard !Task.isCancelled else { return }
             await activity.update(content)
             if generation == self.updateGeneration {
@@ -342,7 +359,8 @@ public enum OwlLiveActivityCleanup {
 }
 #else
 
-// Fallback for iOS <16.2: no-op implementation to keep API surface stable.
+// Fallback for platforms without ActivityKit (e.g. macOS): no-op implementation
+// to keep the API surface stable.
 public final class OwlActivityKitSession {
     public static let shared = OwlActivityKitSession()
     private init() {}

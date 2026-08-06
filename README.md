@@ -226,6 +226,16 @@ Task { @MainActor in
 }
 ```
 
+#### Tune the Live Activity lifespan
+
+The Live Activity disappears when the app terminates (`stop()` is called automatically by the delegate). If the app is force-quit from the app switcher, `applicationWillTerminate` isn't called, so the system removes the leftover activity once its `staleDate` passes. Adjust how soon that happens (default 5 minutes):
+
+```swift
+OwlActivityKitSession.shared.staleDateInterval = 300 // seconds (default 5 minutes); e.g. 10 minutes = 600
+```
+
+Note: while the app is backgrounded, monitoring is paused, so `staleDateInterval` also caps how long the activity keeps showing on the Lock Screen before the system removes it.
+
 OwlLog is built with the latest Swift standards:
 - **Actors**: Uses the `OwlLogger` actor to prevent data races.
 - **Sendable**: All data models conform to the `Sendable` protocol, ensuring safety in Swift 6 Strict Concurrency environments.
