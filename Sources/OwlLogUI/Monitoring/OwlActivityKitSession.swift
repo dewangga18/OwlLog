@@ -20,6 +20,8 @@ import UIKit
     private var lastErrorsCount: Int = 0
     /// The task for monitoring the session.
     private var monitorTask: Task<Void, Never>?
+    /// Monotonically increasing counter used to invalidate stale monitor loops.
+    private var monitorGeneration = 0
     /// The in-flight task that performs the retrying initial request.
     private var startRequestTask: Task<Void, Never>?
     /// Monotonically increasing counter used to ignore stale in-flight start requests.
@@ -154,30 +156,48 @@ import UIKit
         guard let activity else { return }
 
         monitorTask?.cancel()
+        spawnMonitorTask(for: activity)
+    }
+
+    /// Spawns a monitoring loop for the given activity without cancelling any
+    /// existing task (safe to call from inside a loop that is about to exit).
+    private func spawnMonitorTask(for activity: Activity<OwlLiveActivityAttributes>) {
+        monitorGeneration += 1
+        let generation = monitorGeneration
+
         monitorTask = Task { @MainActor in
-            await monitor(activity: activity)
+            await monitor(activity: activity, generation: generation)
         }
     }
 
-    /// Monitors the state of a single activity until it is dismissed, ended, or the task is cancelled.
-    private func monitor(activity: Activity<OwlLiveActivityAttributes>) async {
+    /// Monitors a single activity until it is dismissed, the task is cancelled, or a
+    /// newer loop supersedes it (detected via the generation counter).
+    private func monitor(activity: Activity<OwlLiveActivityAttributes>, generation: Int) async {
         for await state in activity.activityStateUpdates {
-            guard !Task.isCancelled else { break }
+            guard !Task.isCancelled, generation == self.monitorGeneration else { break }
 
             switch state {
                 case .dismissed:
+                    // The user (or the system) removed the Live Activity. 
+                    // Resetting `isActive` lets the next `start()` re-arm the Live Activity 
+                    // when the app returns to the foreground (via `OwlActivityKitLifecycleDelegate`).
                     self.activity = nil
-                    self.monitorTask = nil
                     self.startRequestGeneration += 1
                     self.isActive = false
+                    if generation == self.monitorGeneration {
+                        self.monitorTask = nil
+                    }
                     return
 
                 case .ended:
+                    // Only recreate when the session still wants an activity (e.g. the
+                    // system ended it while the session is active). When `stop()` ends
+                    // the activity, `isActive` is already `false`, so no recreation happens.
                     self.activity = nil
 
                     try? await Task.sleep(nanoseconds: 500_000_000)
 
-                    guard self.isActive, !Task.isCancelled else { return }
+                    guard self.isActive, !Task.isCancelled, generation == self.monitorGeneration else { return }
 
                     do {
                         try self.requestNewActivity()
@@ -187,7 +207,10 @@ import UIKit
                         return
                     }
 
-                    self.startMonitoring()
+                    // Spawn a fresh loop for the new activity without cancelling the
+                    // current task, which returns immediately afterwards.
+                    guard let newActivity = self.activity else { return }
+                    self.spawnMonitorTask(for: newActivity)
                     return
 
                 default:
@@ -195,7 +218,11 @@ import UIKit
             }
         }
 
-        monitorTask = nil
+        // Only clear the reference if this loop is still the current one, so a
+        // superseded loop never wipes out a newer task's reference.
+        if generation == self.monitorGeneration {
+            monitorTask = nil
+        }
     }
 
     /// Pauses the session without ending the Live Activity.
@@ -207,6 +234,7 @@ import UIKit
         startRequestGeneration += 1
         startRequestTask?.cancel()
         startRequestTask = nil
+        monitorGeneration += 1
         monitorTask?.cancel()
         monitorTask = nil
     }
@@ -217,6 +245,7 @@ import UIKit
         startRequestGeneration += 1
         startRequestTask?.cancel()
         startRequestTask = nil
+        monitorGeneration += 1
         monitorTask?.cancel()
         monitorTask = nil
 
@@ -292,7 +321,6 @@ public final class OwlActivityKitSession {
     public func stop() {}
     public var isSessionRunning: Bool { false }
     public func updateIfNeeded(calls: [OwlHTTPCall]) {}
-    public func updateIfNeeded(calls: [OwlHTTPCall], errorsCount: Int) {}
 }
 
 #endif
