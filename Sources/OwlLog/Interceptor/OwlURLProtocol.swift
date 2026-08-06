@@ -117,9 +117,7 @@ public final class OwlURLProtocol: URLProtocol {
             OwlService.shared.addCall(call)
 
             if OwlURLProtocol.isConsoleLogEnabled {
-                #if DEBUG
-                print("[OwlLog] 🚀 \(call.method) \(call.uri)")
-                #endif
+                OwlConsoleLogger.log("🚀 \(call.method) \(call.uri)")
             }
         }
 
@@ -148,9 +146,7 @@ public final class OwlURLProtocol: URLProtocol {
 
                     if OwlURLProtocol.isConsoleLogEnabled {
                         let statusIcon = (200 ... 299).contains(httpResponse.statusCode) ? "✅" : "⚠️"
-                        #if DEBUG
-                        print("[OwlLog] \(statusIcon) \(httpResponse.statusCode) (\(duration)ms) \(newRequest.httpMethod ?? "") \(newRequest.url?.absoluteString ?? "")")
-                        #endif
+                        OwlConsoleLogger.log("\(statusIcon) \(httpResponse.statusCode) (\(duration)ms) \(newRequest.httpMethod ?? "") \(newRequest.url?.absoluteString ?? "")")
                     }
                 }
             }
@@ -174,10 +170,8 @@ public final class OwlURLProtocol: URLProtocol {
                     )
 
                     if OwlURLProtocol.isConsoleLogEnabled {
-                        #if DEBUG
-                        print("[OwlLog] ❌ ERROR (\(duration)ms) \(newRequest.httpMethod ?? "") \(newRequest.url?.absoluteString ?? "")")
-                        print("        Reason: \(error.localizedDescription)")
-                        #endif
+                        OwlConsoleLogger.log("❌ ERROR (\(duration)ms) \(newRequest.httpMethod ?? "") \(newRequest.url?.absoluteString ?? "")")
+                        OwlConsoleLogger.log("        Reason: \(error.localizedDescription)")
                     }
                 }
             }

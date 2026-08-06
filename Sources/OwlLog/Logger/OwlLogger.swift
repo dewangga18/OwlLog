@@ -38,9 +38,7 @@ public actor OwlLogger {
     /// Adds an HTTP response to the logger.
     public func addResponse(_ response: OwlHTTPResponse, requestId: String) {
         guard let index = calls.firstIndex(where: { $0.id == requestId }) else {
-            #if DEBUG
-            print("⚠️ No call found with id \(requestId)")
-            #endif
+            OwlConsoleLogger.log("⚠️ No call found with id \(requestId)")
             return
         }
         
@@ -57,9 +55,7 @@ public actor OwlLogger {
     /// Adds an HTTP error to the logger.
     public func addError(_ error: OwlHTTPError, requestId: String) {
         guard let index = calls.firstIndex(where: { $0.id == requestId }) else {
-            #if DEBUG
-            print("⚠️ No call found with id \(requestId)")
-            #endif
+            OwlConsoleLogger.log("⚠️ No call found with id \(requestId)")
             return
         }
         

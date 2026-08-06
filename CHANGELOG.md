@@ -2,6 +2,14 @@
 
 All notable changes to the OwlLog project will be documented in this file.
 
+## [1.0.12] - 2026-08-06
+
+### Fixed
+- **Live Activity silently disabled until app restart** — Previously, when the initial Live Activity request failed (e.g. app was backgrounded, the system's activity limit was reached, or the entitlement was unavailable), the Live Activity would never appear again until the app was fully restarted. Now a failed start is retried automatically and the session resets cleanly, so the Live Activity recovers on the next `start()`.
+- **Live Activity lost during rapid foreground/background transitions** — Previously, quickly switching apps, hitting breakpoints, or dismissing system alerts while debugging could leave the session in a state where the Live Activity would no longer be created until the app was killed. Session state now stays consistent across `start()`/`stop()` cycles, so the Live Activity keeps working after these transitions.
+- **Live Activity no longer fights the user's dismissal** — Previously, swiping away the Live Activity caused it to reappear automatically moments later. Dismissal is now respected in the moment, and the Live Activity re-arms automatically the next time the app returns to the foreground — so a developer who dismisses the widget while debugging gets it back without restarting the session.
+- **Live Activity disappears when the app goes to background** — Previously, moving the app to the background (app switcher, home screen) ended the Live Activity immediately. Now the Live Activity stays visible on the Lock Screen while the app is backgrounded and is only removed when the app is actually terminated (or the user dismisses it).
+
 ## [1.0.11] - 2026-08-05
 
 ### Fixed

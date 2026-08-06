@@ -32,9 +32,7 @@ import SwiftUI
     /// Adds a new response to an existing HTTP call.
     public func addResponse(_ response: OwlHTTPResponse, requestId: String, duration: Int) {
         guard let index = calls.firstIndex(where: { $0.id == requestId }) else {
-            #if DEBUG
-            print("⚠️ No call found with id \(requestId)")
-            #endif
+            OwlConsoleLogger.log("⚠️ No call found with id \(requestId)")
             return
         }
 
@@ -51,9 +49,7 @@ import SwiftUI
     /// Adds a new error to an existing HTTP call.
     public func addError(_ error: OwlHTTPError, requestId: String, duration: Int) {
         guard let index = calls.firstIndex(where: { $0.id == requestId }) else {
-            #if DEBUG
-            print("⚠️ No call found with id \(requestId)")
-            #endif
+            OwlConsoleLogger.log("⚠️ No call found with id \(requestId)")
             return
         }
 
