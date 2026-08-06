@@ -26,8 +26,7 @@ import UIKit
 
     /// Resumes the session when the app becomes active.
     public func applicationDidBecomeActive(_ application: UIApplication) {
-        // `didFinishLaunching` already started the session; only re-start after the
-        // app was actually paused (background/inactive), avoiding double init at launch.
+        // didFinishLaunching already started the session; only re-start after a real pause.
         guard isPaused else { return }
         isPaused = false
         startSession()
@@ -53,13 +52,11 @@ import UIKit
         if #available(iOS 16.2, *) {
             cancellables.removeAll()
 
-            // Cancel any pending start so a task that outlives `stopSession()`
-            // cannot resurrect the session after it was stopped.
+            // Cancel any pending start so it cannot resurrect the session after stop().
             startTask?.cancel()
 
             startTask = Task { @MainActor in
-                // Only clean up leftovers when initializing a fresh session — never when
-                // resuming an already-running Live Activity from the background.
+                // Only clean up leftovers when initializing a fresh session, never on resume.
                 if !OwlActivityKitSession.shared.isSessionRunning {
                     await OwlLiveActivityCleanup.dismissExisting()
                 }

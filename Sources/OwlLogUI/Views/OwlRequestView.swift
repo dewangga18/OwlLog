@@ -142,16 +142,12 @@ private extension OwlRequestView {
         }
     }
 
-    /// Displays request body as a separate section with formatted JSON and a copy button.
-    /// Binary image bodies are decoded asynchronously via `OwlDataImageView` with a loading
-    /// indicator while the image renders. Multipart/form-data bodies are not decoded — the
-    /// parsed parts are already shown in formDataFieldsSection and formDataFilesSection.
+    /// Displays request body as a section with formatted JSON, image preview, or multipart info and a copy button.
     @ViewBuilder var bodySection: some View {
         if let body = call.request?.body, !body.isEmpty {
             let requestHeaders = call.request?.headers ?? [:]
             let contentType = OwlContentFormatter.detectContentType(headers: requestHeaders, body: body)
-            // Pre-format for the text case; computed here so we can guard on emptiness
-            // before rendering the DisclosureGroup header.
+            // Pre-format for the text case so we can guard on emptiness first.
             let formatted = (contentType != .image && contentType != .multipart)
                 ? OwlContentFormatter.formatBodyAsJSON(body)
                 : ""
@@ -164,8 +160,7 @@ private extension OwlRequestView {
                         OwlDataImageView(data: body)
                             .frame(maxWidth: .infinity, alignment: .leading)
                     } else if contentType == .multipart {
-                        // Multipart body is raw binary — do NOT attempt to decode.
-                        // Individual parts are displayed in Form Data Fields / Form Data Files sections below.
+                        // Multipart body is raw binary; parts show in the Form Data sections.
                         HStack(spacing: 8) {
                             Image(systemName: "doc.on.doc")
                                 .foregroundColor(.gray)

@@ -35,18 +35,10 @@ import UIKit
     private let startRetryAttempts = 2
     /// Delay between retry attempts.
     private let startRetryDelay: UInt64 = 500_000_000 // 0.5s
-    /// Delay before applying an activity update, coalescing bursts of traffic into
-    /// a single call and respecting ActivityKit's system update budget.
+    /// Debounce before applying an activity update, coalescing bursts within ActivityKit's budget.
     private let updateDebounceInterval: UInt64 = 500_000_000 // 0.5s
 
-    /// How long the Live Activity stays fresh after its last update before the
-    /// system marks it stale and removes it from the Lock Screen.
-    ///
-    /// This bounds how long a leftover activity survives after a force-quit (where
-    /// `applicationWillTerminate` is not called, so `stop()` never runs) and how
-    /// long the activity keeps showing while the app is backgrounded with
-    /// monitoring paused. Defaults to 5 minutes — shorten it for even faster
-    /// cleanup of leftovers after a force-quit.
+    /// How long the Live Activity stays fresh before the system marks it stale and removes it (default 5 minutes).
     public var staleDateInterval: TimeInterval = 300
 
     /// Starts the session.
@@ -54,8 +46,7 @@ import UIKit
         guard ActivityAuthorizationInfo().areActivitiesEnabled else { return }
 
         if isActive {
-            // The activity reference may be stale if it was dismissed while the
-            // app was backgrounded and monitoring was paused.
+            // Activity may be stale if dismissed while backgrounded and monitoring paused.
             if let activity, isActivityAlive(activity) {
                 startMonitoring()
                 return
@@ -84,8 +75,7 @@ import UIKit
                 return
             }
 
-            // If `stop()` was called while we were awaiting the request, end the
-            // just-created activity instead of leaving an orphaned Live Activity.
+            // If stop() ran during the request, end the new activity instead of leaving an orphan.
             guard isActive else {
                 if let activity {
                     self.activity = nil
@@ -128,7 +118,7 @@ import UIKit
         var lastError: Error?
 
         for attempt in 0 ..< startRetryAttempts {
-            // A cancelled task (e.g. `stopSession()` while the start task was pending) must not keep requesting new activities.
+            // A cancelled start task must not keep requesting new activities.
             guard !Task.isCancelled else { throw CancellationError() }
 
             do {
@@ -198,9 +188,7 @@ import UIKit
 
             switch state {
                 case .dismissed:
-                    // The user (or the system) removed the Live Activity. 
-                    // Resetting `isActive` lets the next `start()` re-arm the Live Activity 
-                    // when the app returns to the foreground (via `OwlActivityKitLifecycleDelegate`).
+                    // Dismissal respected; resetting isActive re-arms on the next foreground start().
                     self.activity = nil
                     self.startRequestGeneration += 1
                     self.updateGeneration += 1
@@ -213,9 +201,7 @@ import UIKit
                     return
 
                 case .ended:
-                    // Only recreate when the session still wants an activity (e.g. the
-                    // system ended it while the session is active). When `stop()` ends
-                    // the activity, `isActive` is already `false`, so no recreation happens.
+                    // Recreate only if the session still wants one; stop() already sets isActive = false.
                     self.activity = nil
                     self.updateGeneration += 1
                     self.updateTask?.cancel()
@@ -233,8 +219,7 @@ import UIKit
                         return
                     }
 
-                    // Spawn a fresh loop for the new activity without cancelling the
-                    // current task, which returns immediately afterwards.
+                    // Spawn a fresh loop for the new activity without cancelling this one.
                     guard let newActivity = self.activity else { return }
                     self.spawnMonitorTask(for: newActivity)
                     return
@@ -244,18 +229,13 @@ import UIKit
             }
         }
 
-        // Only clear the reference if this loop is still the current one, so a
-        // superseded loop never wipes out a newer task's reference.
+        // Only the current loop clears monitorTask, so a superseded loop can't wipe a newer one.
         if generation == self.monitorGeneration {
             monitorTask = nil
         }
     }
 
-    /// Pauses the session without ending the Live Activity.
-    ///
-    /// Used when the app moves to the background: the Live Activity keeps showing
-    /// on the Lock Screen, but updates and monitoring are suspended until the app
-    /// returns to the foreground (`start()` resumes monitoring).
+    /// Pauses the session without ending the Live Activity (keeps showing while backgrounded).
     public func pause() {
         startRequestGeneration += 1
         startRequestTask?.cancel()
@@ -311,17 +291,14 @@ import UIKit
             staleDate: Date().addingTimeInterval(staleDateInterval)
         )
 
-        // Serialize rapid updates: cancel any in-flight update and coalesce into the
-        // latest content, so bursts of network traffic never pile up update calls.
+        // Serialize updates: cancel any in-flight one so bursts coalesce into the latest content.
         updateGeneration += 1
         let generation = updateGeneration
         updateTask?.cancel()
         updateTask = Task { @MainActor in
-            // Skip the update entirely if this task was superseded while waiting
-            // to run — the newer task already carries the latest content.
+            // Skip if superseded — a newer task already carries the latest content.
             guard !Task.isCancelled else { return }
-            // Debounce: wait briefly so rapid bursts collapse into one update call
-            // instead of hammering ActivityKit's system update budget.
+            // Debounce so rapid bursts collapse into one update, respecting ActivityKit's budget.
             try? await Task.sleep(nanoseconds: updateDebounceInterval)
             guard !Task.isCancelled else { return }
             await activity.update(content)
@@ -359,8 +336,7 @@ public enum OwlLiveActivityCleanup {
 }
 #else
 
-// Fallback for platforms without ActivityKit (e.g. macOS): no-op implementation
-// to keep the API surface stable.
+// No-op fallback for platforms without ActivityKit (e.g. macOS).
 public final class OwlActivityKitSession {
     public static let shared = OwlActivityKitSession()
     private init() {}

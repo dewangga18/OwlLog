@@ -71,8 +71,7 @@ private extension OwlLogView {
         }
     }
 
-    /// Builds the sheet view used to display request statistics.
-    /// The sheet is wrapped in a navigation container to allow a toolbar with a dismiss action.
+    /// Builds the sheet view for request statistics, wrapped in a navigation container with a dismiss toolbar.
     @ViewBuilder
     func sheetView() -> some View {
         if #available(iOS 16.0, macOS 13.0, *) {

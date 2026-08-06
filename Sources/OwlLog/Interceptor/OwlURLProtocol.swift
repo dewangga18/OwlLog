@@ -63,8 +63,7 @@ public final class OwlURLProtocol: URLProtocol {
             }
             stream.close()
             if !data.isEmpty {
-                // Replace the stream with raw Data so URLSession can still send the body
-                // and we can read it for logging / curl generation below.
+                // Replace the stream with raw Data so URLSession can still send it.
                 mutableReq.httpBody = data
             }
         }
@@ -74,8 +73,7 @@ public final class OwlURLProtocol: URLProtocol {
         let id = UUID().uuidString
         let startTime = Date()
 
-        // Parse multipart body parts when Content-Type is multipart/form-data,
-        // so formDataFields and formDataFiles are populated for the UI.
+        // Parse multipart/form-data parts into formDataFields and formDataFiles for the UI.
         var formDataFiles: [OwlHTTPFormDataFile]? = nil
         var formDataFields: [OwlFormDataField]? = nil
         if let contentTypeHeader = newRequest.value(forHTTPHeaderField: "Content-Type"),
@@ -220,8 +218,7 @@ public final class OwlURLProtocol: URLProtocol {
     ) -> MultipartParseResult {
         var result = MultipartParseResult()
 
-        // Extract boundary from Content-Type header.
-        // e.g. "multipart/form-data; boundary=----WebKitFormBoundary7MA4YWxkTrZu0gW"
+        // Extract boundary from Content-Type, e.g. "boundary=----WebKitFormBoundary...".
         guard let boundaryValue = contentTypeHeader
             .components(separatedBy: ";")
             .first(where: { $0.trimmingCharacters(in: .whitespaces).lowercased().hasPrefix("boundary=") })?
@@ -247,8 +244,7 @@ public final class OwlURLProtocol: URLProtocol {
             // Skip empty parts and the final "--" epilogue.
             guard part.count > 4 else { continue }
 
-            // Each valid part starts with CRLF (from the boundary line), then headers,
-            // then CRLF CRLF separator, then the part body.
+            // Valid parts start with CRLF, then headers, then CRLF CRLF, then the body.
             var partData = part
             // Strip leading CRLF that follows the boundary.
             if partData.starts(with: crlfData) {

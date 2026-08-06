@@ -267,8 +267,7 @@ public enum OwlContentFormatter {
             return unescapeSlashes(string)
         }
 
-        // Fallback to plain UTF-8 text — use String(data:encoding:) which returns nil
-        // for non-UTF-8 bytes, unlike String(decoding:as:) which silently replaces them.
+        // Fallback to plain UTF-8 text; String(data:encoding:) returns nil for non-UTF-8 bytes.
         return String(data: body, encoding: .utf8) ?? ""
     }
 }

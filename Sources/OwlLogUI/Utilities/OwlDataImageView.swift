@@ -17,20 +17,11 @@ import AppKit
 private typealias PlatformImage = NSImage
 #endif
 
-/// Decodes a raw `Data` blob into a SwiftUI `Image` asynchronously.
-///
-/// While decoding is in progress, a `ProgressView` is shown.
-/// If the data cannot be decoded as an image, a placeholder is shown instead.
-///
-/// Usage:
-/// ```swift
-/// OwlDataImageView(data: body)
-/// ```
+/// Asynchronously decodes raw Data into an image, showing a ProgressView while loading and a placeholder on failure.
 struct OwlDataImageView: View {
     let data: Data
 
-    /// Internal load state — stores the platform-native image type (not SwiftUI.Image)
-    /// to avoid Sendable violations when crossing actor isolation boundaries in Swift 6.
+    /// Load state storing the platform-native image type (not SwiftUI.Image) to avoid Sendable violations.
     private enum LoadState {
         case loading
         #if canImport(UIKit) || canImport(AppKit)
